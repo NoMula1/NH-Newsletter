@@ -20,6 +20,7 @@ type EmbedGeneratorConfig struct {
 	Token        string
 	BrokerURL    string
 	GatewayCount int
+	DiscordLink  string
 }
 
 type EmbedGenerator struct {

@@ -15,18 +15,24 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/spf13/viper"
 )
 
+type ImagesHandlerConfig struct {
+	AppPublicURL string
+	CDNPublicURL string
+}
+
 type ImagesHandler struct {
+	config     ImagesHandlerConfig
 	imageStore store.ImageStore
 	fileStore  store.FileStore
 	am         *access.AccessManager
 	planStore  store.PlanStore
 }
 
-func New(imageStore store.ImageStore, fileStore store.FileStore, am *access.AccessManager, planStore store.PlanStore) *ImagesHandler {
+func New(config ImagesHandlerConfig, imageStore store.ImageStore, fileStore store.FileStore, am *access.AccessManager, planStore store.PlanStore) *ImagesHandler {
 	return &ImagesHandler{
+		config:     config,
 		imageStore: imageStore,
 		fileStore:  fileStore,
 		am:         am,
@@ -117,7 +123,7 @@ func (h *ImagesHandler) HandleUploadImage(c *fiber.Ctx) error {
 
 	return c.JSON(wire.UploadImageResponseWire{
 		Success: true,
-		Data:    imageToWire(image),
+		Data:    h.imageToWire(image),
 	})
 }
 
@@ -132,7 +138,7 @@ func (h *ImagesHandler) HandleGetImage(c *fiber.Ctx) error {
 
 	return c.JSON(wire.GetImageResponseWire{
 		Success: true,
-		Data:    imageToWire(image),
+		Data:    h.imageToWire(image),
 	})
 }
 
@@ -144,7 +150,7 @@ func (h *ImagesHandler) HandleDownloadImage(c *fiber.Ctx) error {
 			return fmt.Errorf("could not parse referer: %w", err)
 		}
 
-		appURL, err := url.Parse(viper.GetString("app.public_url"))
+		appURL, err := url.Parse(h.config.AppPublicURL)
 		if err != nil {
 			return fmt.Errorf("could not parse app url: %w", err)
 		}
@@ -174,13 +180,13 @@ func (h *ImagesHandler) HandleDownloadImage(c *fiber.Ctx) error {
 	return c.Send(file.Body)
 }
 
-func imageToWire(image *model.Image) wire.ImageWire {
+func (h *ImagesHandler) imageToWire(image *model.Image) wire.ImageWire {
 	return wire.ImageWire{
 		ID:       image.ID,
 		UserID:   image.UserID,
 		GuildID:  image.GuildID,
 		FileName: image.FileName,
 		FileSize: image.FileSize,
-		CDNURL:   viper.GetString("cdn.public_url") + "/images/" + image.S3Key,
+		CDNURL:   h.config.CDNPublicURL + "/images/" + image.S3Key,
 	}
 }

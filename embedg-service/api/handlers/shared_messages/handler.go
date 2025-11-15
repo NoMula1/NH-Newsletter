@@ -13,15 +13,20 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/spf13/viper"
 )
 
+type SharedMessageHandlerConfig struct {
+	AppPublicURL string
+}
+
 type SharedMessageHandler struct {
+	config             SharedMessageHandlerConfig
 	sharedMessageStore store.SharedMessageStore
 }
 
-func New(sharedMessageStore store.SharedMessageStore) *SharedMessageHandler {
+func New(config SharedMessageHandlerConfig, sharedMessageStore store.SharedMessageStore) *SharedMessageHandler {
 	return &SharedMessageHandler{
+		config:             config,
 		sharedMessageStore: sharedMessageStore,
 	}
 }
@@ -50,7 +55,7 @@ func (h *SharedMessageHandler) HandleCreateSharedMessage(c *fiber.Ctx, req wire.
 			CreatedAt: msg.CreatedAt,
 			ExpiresAt: msg.ExpiresAt,
 			Data:      msg.Data,
-			URL:       fmt.Sprintf("%s/editor/share/%s", viper.GetString("app.public_url"), msg.ID),
+			URL:       fmt.Sprintf("%s/editor/share/%s", h.config.AppPublicURL, msg.ID),
 		},
 	})
 }
@@ -74,7 +79,7 @@ func (h *SharedMessageHandler) HandleGetSharedMessage(c *fiber.Ctx) error {
 			CreatedAt: msg.CreatedAt,
 			ExpiresAt: msg.ExpiresAt,
 			Data:      msg.Data,
-			URL:       fmt.Sprintf("%s/editor/share/%s", viper.GetString("app.public_url"), msg.ID),
+			URL:       fmt.Sprintf("%s/editor/share/%s", h.config.AppPublicURL, msg.ID),
 		},
 	})
 }

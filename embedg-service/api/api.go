@@ -24,7 +24,24 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func Serve(ctx context.Context, env *Env, host string, port int) {
+type APIConfig struct {
+	Host string
+	Port int
+
+	AppPublicURL string
+	APIPublicURL string
+	CDNPublicURL string
+
+	DiscordLink string
+	SourceLink  string
+
+	DiscordClientID     string
+	DiscordClientSecret string
+	DiscordPublicKey    string
+	InsecureCookies     bool
+}
+
+func Serve(ctx context.Context, env *Env, config APIConfig) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			var e *wire.Error
@@ -52,16 +69,16 @@ func Serve(ctx context.Context, env *Env, host string, port int) {
 		EnableStackTrace: true,
 	}))
 
-	registerRoutes(app, env)
+	registerRoutes(app, env, config)
 
-	slog.Info("Starting API server", slog.String("host", host), slog.Int("port", port))
+	slog.Info("Starting API server", slog.String("host", config.Host), slog.Int("port", config.Port))
 
 	go func() {
 		<-ctx.Done()
 		app.Shutdown()
 	}()
 
-	err := app.Listen(fmt.Sprintf("%s:%d", host, port))
+	err := app.Listen(fmt.Sprintf("%s:%d", config.Host, config.Port))
 	if err != nil {
 		slog.Error("Failed to start server", slog.Any("error", err))
 		os.Exit(1)

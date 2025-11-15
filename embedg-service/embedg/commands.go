@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/handler/middleware"
@@ -13,8 +15,6 @@ import (
 	"github.com/disgoorg/snowflake/v2"
 	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
-	"log/slog"
-	"github.com/spf13/viper"
 )
 
 var commands = []discord.ApplicationCommandCreate{
@@ -293,7 +293,7 @@ func (g *EmbedGenerator) handleHelpCommand(e *handler.CommandEvent) error {
 					discord.ButtonComponent{
 						Style: discord.ButtonStyleLink,
 						Label: "Discord Server",
-						URL:   viper.GetString("links.discord"),
+						URL:   g.config.DiscordLink,
 					},
 				},
 			},

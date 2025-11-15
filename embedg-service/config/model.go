@@ -7,12 +7,15 @@ import (
 )
 
 type RootConfig struct {
+	API      APIConfig      `toml:"api"`
+	App      AppConfig      `toml:"app"`
+	CDN      CDNConfig      `toml:"cdn"`
 	Discord  DiscordConfig  `toml:"discord"`
 	Premium  PremiumConfig  `toml:"premium"`
+	Links    LinksConfig    `toml:"links"`
 	Logging  LoggingConfig  `toml:"logging"`
 	Database DatabaseConfig `toml:"database"`
 	Broker   BrokerConfig   `toml:"broker"`
-	API      APIConfig      `toml:"api"`
 	OpenAI   OpenAIConfig   `toml:"openai"`
 }
 
@@ -22,18 +25,36 @@ func (cfg *RootConfig) Validate() error {
 }
 
 type APIConfig struct {
-	Host string `toml:"host" validate:"required"`
-	Port int    `toml:"port" validate:"required"`
+	PublicURL       string `toml:"public_url" validate:"required"`
+	Host            string `toml:"host" validate:"required"`
+	Port            int    `toml:"port" validate:"required"`
+	InsecureCookies bool   `toml:"insecure_cookies"`
+}
+
+type CDNConfig struct {
+	PublicURL string `toml:"public_url" validate:"required"`
+}
+
+type AppConfig struct {
+	PublicURL string `toml:"public_url" validate:"required"`
 }
 
 type DiscordConfig struct {
-	Token string `toml:"token" validate:"required"`
+	Token        string `toml:"token" validate:"required"`
+	ClientID     string `toml:"client_id" validate:"required"`
+	ClientSecret string `toml:"client_secret" validate:"required"`
+	PublicKey    string `toml:"public_key" validate:"required"`
 }
 
 type PremiumConfig struct {
 	BeneficialGuildID common.ID    `toml:"beneficial_guild_id" `
 	BeneficialRoleID  common.ID    `toml:"beneficial_role_id"`
 	Plans             []model.Plan `toml:"plans"`
+}
+
+type LinksConfig struct {
+	Discord string `toml:"discord"`
+	Source  string `toml:"source"`
 }
 
 type LoggingConfig struct {

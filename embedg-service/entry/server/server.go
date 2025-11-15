@@ -26,6 +26,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		Token:        cfg.Discord.Token,
 		BrokerURL:    cfg.Broker.NATS.URL,
 		GatewayCount: cfg.Broker.GatewayCount,
+		DiscordLink:  cfg.Links.Discord,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create embedg: %w", err)
@@ -54,7 +55,9 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 	embedg.Client().AddEventListeners(handler)
 
 	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest())
-	sessionManager := session.New(pg)
+	sessionManager := session.New(session.SessionManagerConfig{
+		InsecureCookies: cfg.API.InsecureCookies,
+	}, pg)
 	webhookManager := webhook.NewWebhookManager(embedg.Rest(), embedg.Caches(), customBotManager)
 	embedg.Client().AddEventListeners(webhookManager)
 
@@ -102,7 +105,19 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		FileStore:             blob,
 		AppContext:            embedg,
 		EventDispatcher:       embedg.Client().EventManager,
-	}, cfg.API.Host, cfg.API.Port)
+	}, api.APIConfig{
+		Host:                cfg.API.Host,
+		Port:                cfg.API.Port,
+		AppPublicURL:        cfg.App.PublicURL,
+		APIPublicURL:        cfg.API.PublicURL,
+		CDNPublicURL:        cfg.CDN.PublicURL,
+		DiscordLink:         cfg.Links.Discord,
+		SourceLink:          cfg.Links.Source,
+		DiscordClientID:     cfg.Discord.ClientID,
+		DiscordClientSecret: cfg.Discord.ClientSecret,
+		DiscordPublicKey:    cfg.Discord.PublicKey,
+		InsecureCookies:     cfg.API.InsecureCookies,
+	})
 
 	return nil
 }

@@ -1,6 +1,17 @@
+[app]
+public_url = "http://localhost:5173/app"
+
 [api]
 host = "127.0.0.1"
 port = 8080
+public_url = "http://localhost:5173/api"
+
+[cdn]
+public_url = "http://localhost:8080/cdn"
+
+[links]
+discord = "https://discord.gg/CpHwbKQKHA"
+source = "https://github.com/merlinfuchs/embed-generator"
 
 [database.postgres]
 host = "127.0.0.1"

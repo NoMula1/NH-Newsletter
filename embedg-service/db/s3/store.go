@@ -11,7 +11,6 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/encrypt"
-	"github.com/spf13/viper"
 )
 
 var requiredBuckets = []string{
@@ -60,8 +59,8 @@ func New(config ClientConfig) (*Client, error) {
 	}
 
 	var encryption encrypt.ServerSide
-	if viper.GetString("s3.ssec_key") != "" {
-		key, err := hex.DecodeString(viper.GetString("s3.ssec_key"))
+	if config.SSECKey != "" {
+		key, err := hex.DecodeString(config.SSECKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode S3 encryption key: %w", err)
 		}

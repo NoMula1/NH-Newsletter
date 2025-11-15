@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
-	"github.com/spf13/viper"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -25,7 +24,7 @@ const embedLinkHTML = `
 </html> 
 `
 
-func renderEmbedLinkHTML(c *fiber.Ctx, el *model.EmbedLink) error {
+func (h *EmbedLinksHandler) renderEmbedLinkHTML(c *fiber.Ctx, el *model.EmbedLink) error {
 	metaTags := metaTagsToHTML(map[string]string{
 		"og:title":       el.OgTitle.String,
 		"og:site_name":   el.OgSiteName.String,
@@ -36,7 +35,7 @@ func renderEmbedLinkHTML(c *fiber.Ctx, el *model.EmbedLink) error {
 	})
 
 	if el.ID != "" {
-		oEmbedURL := fmt.Sprintf("%s/embed-links/%s/oembed", viper.GetString("api.public_url"), el.ID)
+		oEmbedURL := fmt.Sprintf("%s/embed-links/%s/oembed", h.config.APIPublicURL, el.ID)
 		metaTags += fmt.Sprintf(`<link type="application/json+oembed" href="%s" />`, oEmbedURL)
 	}
 
@@ -46,11 +45,9 @@ func renderEmbedLinkHTML(c *fiber.Ctx, el *model.EmbedLink) error {
 	return c.SendString(html)
 }
 
-func renderUnknownEmbedLinkHTML(c *fiber.Ctx) error {
-	appURL := viper.GetString("app.public_url")
-
-	return renderEmbedLinkHTML(c, &model.EmbedLink{
-		Url:           appURL + "/tools/links",
+func (h *EmbedLinksHandler) renderUnknownEmbedLinkHTML(c *fiber.Ctx) error {
+	return h.renderEmbedLinkHTML(c, &model.EmbedLink{
+		Url:           h.config.AppPublicURL + "/tools/links",
 		OgTitle:       null.StringFrom("Unknwon Embed Link"),
 		OgSiteName:    null.StringFrom("Embed Generator"),
 		OgDescription: null.StringFrom("Create beautiful embed links for Discord, Slack, Twitter, and more!"),

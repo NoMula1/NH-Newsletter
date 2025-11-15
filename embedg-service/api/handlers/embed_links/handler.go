@@ -12,15 +12,21 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/spf13/viper"
 )
+
+type EmbedLinksHandlerConfig struct {
+	APIPublicURL string
+	AppPublicURL string
+}
 
 type EmbedLinksHandler struct {
 	embedLinkStore store.EmbedLinkStore
+	config         EmbedLinksHandlerConfig
 }
 
-func New(embedLinkStore store.EmbedLinkStore) *EmbedLinksHandler {
+func New(config EmbedLinksHandlerConfig, embedLinkStore store.EmbedLinkStore) *EmbedLinksHandler {
 	return &EmbedLinksHandler{
+		config:         config,
 		embedLinkStore: embedLinkStore,
 	}
 }
@@ -46,7 +52,7 @@ func (h *EmbedLinksHandler) HandleCreateEmbedLink(c *fiber.Ctx, req wire.EmbedLi
 		return err
 	}
 
-	publicURL := strings.TrimSuffix(viper.GetString("api.public_url"), "/api")
+	publicURL := strings.TrimSuffix(h.config.APIPublicURL, "/api")
 
 	return c.JSON(wire.EmbedLinkCreateResponseWire{
 		Success: true,
@@ -61,12 +67,12 @@ func (h *EmbedLinksHandler) HandleRenderEmbedLinkHTML(c *fiber.Ctx) error {
 	embedLink, err := h.embedLinkStore.GetEmbedLink(c.Context(), c.Params("linkID"))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return renderUnknownEmbedLinkHTML(c)
+			return h.renderUnknownEmbedLinkHTML(c)
 		}
 		return err
 	}
 
-	return renderEmbedLinkHTML(c, embedLink)
+	return h.renderEmbedLinkHTML(c, embedLink)
 }
 
 func (h *EmbedLinksHandler) HandleRenderEmbedLinkJSON(c *fiber.Ctx) error {

@@ -16,27 +16,36 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 	"github.com/ravener/discord-oauth2"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"gopkg.in/guregu/null.v4"
 )
 
+type AuthHandlerConfig struct {
+	APIPublicURL    string
+	AppPublicURL    string
+	ClientID        string
+	ClientSecret    string
+	InsecureCookies bool
+}
+
 type AuthHandler struct {
+	config         AuthHandlerConfig
 	userStore      store.UserStore
 	sessionManager *session.SessionManager
 	oauth2Config   *oauth2.Config
 }
 
-func New(userStore store.UserStore, sessionManager *session.SessionManager) *AuthHandler {
+func New(config AuthHandlerConfig, userStore store.UserStore, sessionManager *session.SessionManager) *AuthHandler {
 	conf := &oauth2.Config{
-		RedirectURL:  fmt.Sprintf("%s/auth/callback", viper.GetString("api.public_url")),
-		ClientID:     viper.GetString("discord.client_id"),
-		ClientSecret: viper.GetString("discord.client_secret"),
+		RedirectURL:  fmt.Sprintf("%s/auth/callback", config.APIPublicURL),
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
 		Scopes:       []string{discord.ScopeIdentify, discord.ScopeGuilds},
 		Endpoint:     discord.Endpoint,
 	}
 
 	return &AuthHandler{
+		config:         config,
 		userStore:      userStore,
 		sessionManager: sessionManager,
 		oauth2Config:   conf,
@@ -44,13 +53,13 @@ func New(userStore store.UserStore, sessionManager *session.SessionManager) *Aut
 }
 
 func (h *AuthHandler) HandleAuthRedirect(c *fiber.Ctx) error {
-	state := setOauthStateCookie(c)
-	setOauthRedirectCookie(c)
+	state := h.setOauthStateCookie(c)
+	h.setOauthRedirectCookie(c)
 	return c.Redirect(h.oauth2Config.AuthCodeURL(state), http.StatusTemporaryRedirect)
 }
 
 func (h *AuthHandler) HandleAuthCallback(c *fiber.Ctx) error {
-	state := getOauthStateCookie(c)
+	state := h.getOauthStateCookie(c)
 	if state == "" || c.Query("state") != state {
 		slog.Error("Failed to login: Invalid state")
 		// TODO: redirect to error page
@@ -64,7 +73,7 @@ func (h *AuthHandler) HandleAuthCallback(c *fiber.Ctx) error {
 		return h.HandleAuthRedirect(c)
 	}
 
-	redirectURL := getOauthRedirectURL(c)
+	redirectURL := h.getOauthRedirectURL(c)
 	return c.Redirect(redirectURL, http.StatusTemporaryRedirect)
 }
 
@@ -90,7 +99,7 @@ func (h *AuthHandler) HandleAuthLogout(c *fiber.Ctx) error {
 		return err
 	}
 
-	redirectURL := viper.GetString("app.public_url")
+	redirectURL := h.config.AppPublicURL
 
 	path := c.Query("redirect")
 	if path != "" {
@@ -164,13 +173,13 @@ func (h *AuthHandler) authenticateWithCode(c *fiber.Ctx, code string) (*oauth2.T
 	return tokenData, token, nil
 }
 
-func getOauthStateCookie(c *fiber.Ctx) string {
+func (h *AuthHandler) getOauthStateCookie(c *fiber.Ctx) string {
 	state := c.Cookies("oauth_state")
 	c.ClearCookie("oauth_state")
 	return state
 }
 
-func setOauthStateCookie(c *fiber.Ctx) string {
+func (h *AuthHandler) setOauthStateCookie(c *fiber.Ctx) string {
 	b := make([]byte, 128)
 	rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
@@ -178,13 +187,13 @@ func setOauthStateCookie(c *fiber.Ctx) string {
 		Name:     "oauth_state",
 		Value:    state,
 		HTTPOnly: true,
-		Secure:   !viper.GetBool("api.insecure_cookies"),
+		Secure:   h.config.InsecureCookies,
 	})
 	return state
 }
 
-func getOauthRedirectURL(c *fiber.Ctx) string {
-	redirectURL := viper.GetString("app.public_url")
+func (h *AuthHandler) getOauthRedirectURL(c *fiber.Ctx) string {
+	redirectURL := h.config.AppPublicURL
 
 	path := c.Cookies("oauth_redirect")
 	if path != "" {
@@ -195,14 +204,14 @@ func getOauthRedirectURL(c *fiber.Ctx) string {
 	return redirectURL
 }
 
-func setOauthRedirectCookie(c *fiber.Ctx) {
+func (h *AuthHandler) setOauthRedirectCookie(c *fiber.Ctx) {
 	redirectURL := c.Query("redirect")
 	if redirectURL != "" {
 		c.Cookie(&fiber.Cookie{
 			Name:     "oauth_redirect",
 			Value:    redirectURL,
 			HTTPOnly: true,
-			Secure:   !viper.GetBool("api.insecure_cookies"),
+			Secure:   !h.config.InsecureCookies,
 		})
 	} else {
 		c.ClearCookie("oauth_redirect")

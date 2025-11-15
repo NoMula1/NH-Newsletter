@@ -16,7 +16,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/spf13/viper"
 )
 
 type Session struct {
@@ -27,12 +26,18 @@ type Session struct {
 	ExpiresAt   time.Time
 }
 
+type SessionManagerConfig struct {
+	InsecureCookies bool
+}
+
 type SessionManager struct {
+	config       SessionManagerConfig
 	sessionStore store.SessionStore
 }
 
-func New(sessionStore store.SessionStore) *SessionManager {
+func New(config SessionManagerConfig, sessionStore store.SessionStore) *SessionManager {
 	return &SessionManager{
+		config:       config,
 		sessionStore: sessionStore,
 	}
 }
@@ -93,7 +98,7 @@ func (s *SessionManager) CreateSessionCookie(c *fiber.Ctx, token string) {
 		Name:     "session_token",
 		Value:    token,
 		HTTPOnly: true,
-		Secure:   !viper.GetBool("api.insecure_cookies"),
+		Secure:   !s.config.InsecureCookies,
 		SameSite: "strict",
 		Expires:  time.Now().UTC().Add(30 * 24 * time.Hour),
 	})

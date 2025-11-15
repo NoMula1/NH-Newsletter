@@ -24,15 +24,20 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers/users"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
 	embedgsite "github.com/merlinfuchs/embed-generator/embedg-site"
-	"github.com/spf13/viper"
 )
 
-func registerRoutes(app *fiber.App, env *Env) {
+func registerRoutes(app *fiber.App, env *Env, config APIConfig) {
 	healthHandler := health.New()
 	healthGroup := app.Group("/api/health")
 	healthGroup.Get("/", healthHandler.HandleHealth)
 
-	authHandler := auth.New(env.UserStore, env.SessionManager)
+	authHandler := auth.New(auth.AuthHandlerConfig{
+		APIPublicURL:    config.APIPublicURL,
+		AppPublicURL:    config.AppPublicURL,
+		ClientID:        config.DiscordClientID,
+		ClientSecret:    config.DiscordClientSecret,
+		InsecureCookies: config.InsecureCookies,
+	}, env.UserStore, env.SessionManager)
 	app.Get("/api/auth/login", authHandler.HandleAuthRedirect)
 	app.Get("/api/auth/callback", authHandler.HandleAuthCallback)
 	app.Post("/api/auth/exchange", handlers.WithRequestBody(authHandler.HandleAuthExchange))
@@ -52,7 +57,9 @@ func registerRoutes(app *fiber.App, env *Env) {
 	savedMessagesGroup.Put("/:messageID", handlers.WithRequestBodyValidated(savedMessagesHandler.HandleUpdateSavedMessage))
 	savedMessagesGroup.Delete("/:messageID", savedMessagesHandler.HandleDeleteSavedMessage)
 
-	sharedMessageHandler := shared_messages.New(env.SharedMessageStore)
+	sharedMessageHandler := shared_messages.New(shared_messages.SharedMessageHandlerConfig{
+		AppPublicURL: config.AppPublicURL,
+	}, env.SharedMessageStore)
 	sharedMessagesGroup := app.Group("/api/shared-messages")
 	sharedMessagesGroup.Post("/", handlers.WithRequestBodyValidated(sharedMessageHandler.HandleCreateSharedMessage))
 	sharedMessagesGroup.Get("/:messageID", sharedMessageHandler.HandleGetSharedMessage)
@@ -90,6 +97,9 @@ func registerRoutes(app *fiber.App, env *Env) {
 	app.Post("/api/premium/entitlements/:entitlementID/consume", sessionMiddleware.SessionRequired(), handlers.WithRequestBodyValidated(premiumHandler.HandleConsumeEntitlement))
 
 	customBotHandler := custom_bots.New(
+		custom_bots.CustomBotsHandlerConfig{
+			APIPublicURL: config.APIPublicURL,
+		},
 		env.CustomBotManager,
 		env.CustomCommandStore,
 		env.Rest,
@@ -111,10 +121,15 @@ func registerRoutes(app *fiber.App, env *Env) {
 	app.Post("/api/custom-bot/commands/deploy", sessionMiddleware.SessionRequired(), customBotHandler.HandleDeployCustomCommands)
 	app.Post("/api/gateway/:customBotID", customBotHandler.HandleCustomBotInteraction)
 
-	interactionHandler := interaction.New(env.EventDispatcher, env.Rest)
+	interactionHandler := interaction.New(interaction.InteractionHandlerConfig{
+		DiscordPublicKey: config.DiscordPublicKey,
+	}, env.EventDispatcher, env.Rest)
 	app.Post("/api/gateway", interactionHandler.HandleBotInteraction)
 
-	imagesHandler := images.New(env.ImageStore, env.FileStore, env.AccessManager, env.PremiumManager)
+	imagesHandler := images.New(images.ImagesHandlerConfig{
+		AppPublicURL: config.AppPublicURL,
+		CDNPublicURL: config.CDNPublicURL,
+	}, env.ImageStore, env.FileStore, env.AccessManager, env.PremiumManager)
 	app.Post("/api/images", sessionMiddleware.SessionRequired(), imagesHandler.HandleUploadImage)
 	app.Get("/api/images/:imageID", sessionMiddleware.SessionRequired(), imagesHandler.HandleGetImage)
 	app.Get("/cdn/images/:imageKey", imagesHandler.HandleDownloadImage)
@@ -131,7 +146,10 @@ func registerRoutes(app *fiber.App, env *Env) {
 	scheduledMessagesGroup.Put("/:messageID", handlers.WithRequestBodyValidated(scheduledMessagesHandler.HandleUpdateScheduledMessage))
 	scheduledMessagesGroup.Delete("/:messageID", scheduledMessagesHandler.HandleDeleteScheduledMessage)
 
-	embedLinksHandler := embed_links.New(env.EmbedLinkStore)
+	embedLinksHandler := embed_links.New(embed_links.EmbedLinksHandlerConfig{
+		APIPublicURL: config.APIPublicURL,
+		AppPublicURL: config.AppPublicURL,
+	}, env.EmbedLinkStore)
 	app.Post("/api/embed-links", handlers.WithRequestBodyValidated(embedLinksHandler.HandleCreateEmbedLink))
 	app.Get("/api/embed-links/:linkID/oembed", embedLinksHandler.HandleRenderEmbedLinkJSON)
 	app.Get("/e/:linkID", embedLinksHandler.HandleRenderEmbedLinkHTML)
@@ -141,15 +159,15 @@ func registerRoutes(app *fiber.App, env *Env) {
 	})
 
 	app.Get("/discord", func(c *fiber.Ctx) error {
-		return c.Redirect(viper.GetString("links.discord"), 302)
+		return c.Redirect(config.DiscordLink, 302)
 	})
 
 	app.Get("/source", func(c *fiber.Ctx) error {
-		return c.Redirect(viper.GetString("links.source"), 302)
+		return c.Redirect(config.SourceLink, 302)
 	})
 
 	app.Get("/premium", func(c *fiber.Ctx) error {
-		return c.Redirect(fmt.Sprintf("https://discord.com/application-directory/%s/premium", viper.GetString("discord.client_id")), 302)
+		return c.Redirect(fmt.Sprintf("https://discord.com/application-directory/%s/premium", env.AppContext.ApplicationID()), 302)
 	})
 
 	// Serve static files

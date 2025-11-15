@@ -7,6 +7,8 @@ import (
 
 	"slices"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/discord"
 	disrest "github.com/disgoorg/disgo/rest"
@@ -22,12 +24,15 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/custom_bot"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"log/slog"
-	"github.com/spf13/viper"
 	"gopkg.in/guregu/null.v4"
 )
 
+type CustomBotsHandlerConfig struct {
+	APIPublicURL string
+}
+
 type CustomBotsHandler struct {
+	config             CustomBotsHandlerConfig
 	customBotManager   *custom_bot.CustomBotManager
 	customCommandStore store.CustomCommandStore
 	rest               disrest.Rest
@@ -39,6 +44,7 @@ type CustomBotsHandler struct {
 }
 
 func New(
+	config CustomBotsHandlerConfig,
 	customBotManager *custom_bot.CustomBotManager,
 	customCommandStore store.CustomCommandStore,
 	rest disrest.Rest,
@@ -49,6 +55,7 @@ func New(
 	actionHandler *handler.ActionHandler,
 ) *CustomBotsHandler {
 	return &CustomBotsHandler{
+		config:             config,
 		customBotManager:   customBotManager,
 		customCommandStore: customCommandStore,
 		rest:               rest,
@@ -148,8 +155,8 @@ func (h *CustomBotsHandler) HandleConfigureCustomBot(c *fiber.Ctx, req wire.Cust
 			IsMember:                isMember,
 			HasPermissions:          hasPermissions,
 			HandledFirstInteraction: customBot.HandledFirstInteraction,
-			InviteURL:               botInvite(customBot.ApplicationID, guildID),
-			InteractionEndpointURL:  interactionEndpointURL(customBot.ID),
+			InviteURL:               h.botInvite(customBot.ApplicationID, guildID),
+			InteractionEndpointURL:  h.interactionEndpointURL(customBot.ID),
 
 			GatewayStatus:        customBot.GatewayStatus,
 			GatewayActivityType:  customBot.GatewayActivityType,
@@ -297,8 +304,8 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 			IsMember:                isMember,
 			HasPermissions:          hasPermissions,
 			HandledFirstInteraction: customBot.HandledFirstInteraction,
-			InviteURL:               botInvite(customBot.ApplicationID, guildID),
-			InteractionEndpointURL:  interactionEndpointURL(customBot.ID),
+			InviteURL:               h.botInvite(customBot.ApplicationID, guildID),
+			InteractionEndpointURL:  h.interactionEndpointURL(customBot.ID),
 
 			GatewayStatus:        customBot.GatewayStatus,
 			GatewayActivityType:  customBot.GatewayActivityType,
@@ -309,10 +316,10 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 	})
 }
 
-func botInvite(clientID common.ID, guildID common.ID) string {
+func (h *CustomBotsHandler) botInvite(clientID common.ID, guildID common.ID) string {
 	return fmt.Sprintf("https://discord.com/oauth2/authorize?client_id=%s&scope=bot&permissions=805306368&guild_id=%s", clientID, guildID)
 }
 
-func interactionEndpointURL(id string) string {
-	return fmt.Sprintf("%s/gateway/%s", viper.GetString("api.public_url"), id)
+func (h *CustomBotsHandler) interactionEndpointURL(id string) string {
+	return fmt.Sprintf("%s/gateway/%s", h.config.APIPublicURL, id)
 }

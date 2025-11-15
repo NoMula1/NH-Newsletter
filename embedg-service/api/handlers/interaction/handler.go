@@ -12,25 +12,28 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/spf13/viper"
 )
 
+type InteractionHandlerConfig struct {
+	DiscordPublicKey string
+}
+
 type InteractionHandler struct {
+	config     InteractionHandlerConfig
 	dispatcher store.EventDispatcher
 	rest       rest.Rest
 }
 
-func New(dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
+func New(config InteractionHandlerConfig, dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
 	return &InteractionHandler{
+		config:     config,
 		dispatcher: dispatcher,
 		rest:       rest,
 	}
 }
 
 func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
-	publicKey := viper.GetString("discord.public_key")
-
-	if !verifyInteractionSignaure(c, publicKey) {
+	if !verifyInteractionSignaure(c, h.config.DiscordPublicKey) {
 		return handlers.Unauthorized("invalid_signature", "Invalid signature")
 	}
 
