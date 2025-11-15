@@ -14,7 +14,7 @@ func SyncCommands(ctx context.Context, pg *postgres.Client, cfg *config.RootConf
 		Token:        cfg.Discord.Token,
 		BrokerURL:    cfg.Broker.NATS.URL,
 		GatewayCount: cfg.Broker.GatewayCount,
-	}, pg)
+	})
 	if err != nil {
 		return fmt.Errorf("failed to create embedg: %w", err)
 	}

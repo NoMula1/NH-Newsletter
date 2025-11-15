@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/rs/zerolog/log"
 )
@@ -12,6 +13,53 @@ type Interaction interface {
 	Interaction() discord.Interaction
 	HasResponded() bool
 	Respond(data discord.InteractionResponseData, t ...discord.InteractionResponseType) *discord.Message
+}
+
+type GenericInteraction struct {
+	Responded   bool
+	Rest        rest.Rest
+	Inner       discord.Interaction
+	RespondFunc events.InteractionResponderFunc
+}
+
+func (i *GenericInteraction) Interaction() discord.Interaction {
+	return i.Inner
+}
+
+func (i *GenericInteraction) HasResponded() bool {
+	return i.Responded
+}
+
+func (i *GenericInteraction) Respond(data discord.InteractionResponseData, t ...discord.InteractionResponseType) *discord.Message {
+	responseType := discord.InteractionResponseTypeCreateMessage
+	if len(t) > 0 {
+		responseType = t[0]
+	}
+
+	var err error
+	var msg *discord.Message
+
+	if !i.Responded {
+		err = i.RespondFunc(responseType, data)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to respond to interaction")
+		}
+	} else {
+		msgData, ok := data.(discord.MessageCreate)
+		if !ok {
+			err = fmt.Errorf("can't create followup message, data is not a MessageCreate")
+		} else {
+			msg, err = i.Rest.CreateFollowupMessage(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
+		}
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to respond to interaction")
+	} else {
+		i.Responded = true
+	}
+
+	return msg
 }
 
 type GatewayInteraction struct {
@@ -111,8 +159,4 @@ func (i *RestInteraction) Respond(data discord.InteractionResponseData, t ...dis
 	}
 
 	return msg
-}
-
-type InteractionDispatcher interface {
-	DispatchInteraction(interaction Interaction) error
 }

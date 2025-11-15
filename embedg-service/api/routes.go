@@ -111,7 +111,7 @@ func registerRoutes(app *fiber.App, env *Env) {
 	app.Post("/api/custom-bot/commands/deploy", sessionMiddleware.SessionRequired(), customBotHandler.HandleDeployCustomCommands)
 	app.Post("/api/gateway/:customBotID", customBotHandler.HandleCustomBotInteraction)
 
-	interactionHandler := interaction.New(env.InteractionDispatcher, env.Rest)
+	interactionHandler := interaction.New(env.EventDispatcher, env.Rest)
 	app.Post("/api/gateway", interactionHandler.HandleBotInteraction)
 
 	imagesHandler := images.New(env.ImageStore, env.FileStore, env.AccessManager, env.PremiumManager)

@@ -26,7 +26,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		Token:        cfg.Discord.Token,
 		BrokerURL:    cfg.Broker.NATS.URL,
 		GatewayCount: cfg.Broker.GatewayCount,
-	}, pg)
+	})
 	if err != nil {
 		return fmt.Errorf("failed to create embedg: %w", err)
 	}
@@ -49,6 +49,9 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		actionParser,
 		premiumManager,
 	)
+
+	handler := NewEventHandler(embedg.Rest(), pg, actionHandler)
+	embedg.Client().AddEventListeners(handler)
 
 	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest())
 	sessionManager := session.New(pg)
@@ -98,7 +101,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		OpenAIClient:          openai.NewClient(cfg.OpenAI.APIKey),
 		FileStore:             blob,
 		AppContext:            embedg,
-		// TODO: InteractionDispatcher: interactionDispatcher,
+		EventDispatcher:       embedg.Client().EventManager,
 	}, cfg.API.Host, cfg.API.Port)
 
 	return nil

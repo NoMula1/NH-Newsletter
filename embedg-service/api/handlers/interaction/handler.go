@@ -10,17 +10,17 @@ import (
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-service/actions/handler"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
+	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 	"github.com/spf13/viper"
 )
 
 type InteractionHandler struct {
-	dispatcher handler.InteractionDispatcher
+	dispatcher store.EventDispatcher
 	rest       rest.Rest
 }
 
-func New(dispatcher handler.InteractionDispatcher, rest rest.Rest) *InteractionHandler {
+func New(dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
 	return &InteractionHandler{
 		dispatcher: dispatcher,
 		rest:       rest,
@@ -48,13 +48,15 @@ func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
 
 	respCh := make(chan *discord.InteractionResponse)
 
-	ri := &handler.RestInteraction{
-		Inner:           interaction.Interaction,
-		Rest:            h.rest,
-		InitialResponse: respCh,
+	interaction.Respond = func(responseType discord.InteractionResponseType, data discord.InteractionResponseData, opts ...rest.RequestOpt) error {
+		respCh <- &discord.InteractionResponse{
+			Type: responseType,
+			Data: data,
+		}
+		return nil
 	}
 
-	h.dispatcher.DispatchInteraction(ri)
+	h.dispatcher.DispatchEvent(interaction)
 
 	select {
 	case resp := <-respCh:

@@ -90,5 +90,5 @@ type Env struct {
 	OpenAIClient          *openai.Client
 	FileStore             store.FileStore
 	AppContext            store.AppContext
-	InteractionDispatcher handler.InteractionDispatcher
+	EventDispatcher       store.EventDispatcher
 }

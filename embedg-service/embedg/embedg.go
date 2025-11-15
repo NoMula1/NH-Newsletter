@@ -10,7 +10,6 @@ import (
 	disrest "github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
-	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 	"github.com/merlinfuchs/stateway/stateway-lib/broker"
 	"github.com/merlinfuchs/stateway/stateway-lib/cache"
 	"github.com/merlinfuchs/stateway/stateway-lib/compat"
@@ -30,14 +29,11 @@ type EmbedGenerator struct {
 	compatCaches discache.Caches
 	broker       broker.Broker
 	config       EmbedGeneratorConfig
-
-	actionSetStore store.MessageActionSetStore
 }
 
 func NewEmbedGenerator(
 	ctx context.Context,
 	config EmbedGeneratorConfig,
-	actionSetStore store.MessageActionSetStore,
 ) (*EmbedGenerator, error) {
 	br, err := broker.NewNATSBroker(config.BrokerURL)
 	if err != nil {
@@ -72,19 +68,15 @@ func NewEmbedGenerator(
 	gateway := gateway.NewGatewayClient(br)
 
 	embedg := &EmbedGenerator{
-		client:         client,
-		cache:          cache,
-		gateway:        gateway,
-		compatCaches:   compatCaches,
-		broker:         br,
-		config:         config,
-		actionSetStore: actionSetStore,
+		client:       client,
+		cache:        cache,
+		gateway:      gateway,
+		compatCaches: compatCaches,
+		broker:       br,
+		config:       config,
 	}
 
-	client.AddEventListeners(
-		bot.NewListenerFunc(embedg.onMessageDelete),
-		embedg.interactionMux(),
-	)
+	client.AddEventListeners(embedg.interactionMux())
 
 	return embedg, nil
 }
