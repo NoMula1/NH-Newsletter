@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/merlinfuchs/embed-generator/embedg-server/util"
+	"log/slog"
+
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
-	"log/slog"
 )
 
 func (m *ActionParser) CreateActionsForMessage(ctx context.Context, actionSets map[string]actions.ActionSet, derivedPerms actions.ActionDerivedPermissions, messageID common.ID, ephemeral bool) error {
@@ -19,7 +19,7 @@ func (m *ActionParser) CreateActionsForMessage(ctx context.Context, actionSets m
 
 	for actionSetID, actionSet := range actionSets {
 		_, err = m.actionSetStore.CreateMessageActionSet(ctx, model.MessageActionSet{
-			ID:                 util.UniqueID(),
+			ID:                 common.UniqueID().String(),
 			MessageID:          messageID,
 			SetID:              actionSetID,
 			Actions:            actionSet,

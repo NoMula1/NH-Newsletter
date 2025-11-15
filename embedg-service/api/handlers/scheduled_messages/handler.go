@@ -4,8 +4,9 @@ import (
 	"errors"
 	"time"
 
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -14,7 +15,6 @@ import (
 	scheduled_messages "github.com/merlinfuchs/embed-generator/embedg-service/manager/scheduled_message"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"log/slog"
 )
 
 type ScheduledMessageHandler struct {
@@ -52,13 +52,13 @@ func (h *ScheduledMessageHandler) HandleCreateScheduledMessage(c *fiber.Ctx, req
 	}
 
 	if !req.OnlyOnce && !features.PeriodicScheduledMessages {
-		return helpers.Forbidden("insufficient_plan", "Periodic scheduled messages are not available on your plan.")
+		return handlers.Forbidden("insufficient_plan", "Periodic scheduled messages are not available on your plan.")
 	}
 
 	// TODO: validate max scheduled messages
 
 	if req.EndAt.Valid && req.EndAt.Time.Before(req.StartAt) {
-		return helpers.BadRequest("invalid_end_at", "The end_at field must be after the start_at field.")
+		return handlers.BadRequest("invalid_end_at", "The end_at field must be after the start_at field.")
 	}
 
 	if req.StartAt.Before(time.Now().UTC()) {
@@ -70,16 +70,16 @@ func (h *ScheduledMessageHandler) HandleCreateScheduledMessage(c *fiber.Ctx, req
 		var err error
 		nextAt, err = scheduled_messages.GetFirstCronTick(req.CronExpression.String, req.StartAt, req.CronTimezone.String)
 		if err != nil {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
 		}
 
 		nextNextAt, err := scheduled_messages.GetNextCronTick(req.CronExpression.String, nextAt, req.CronTimezone.String)
 		if err != nil {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
 		}
 
 		if nextNextAt.Sub(nextAt) < time.Minute {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is too tight and will trigger too often.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is too tight and will trigger too often.")
 		}
 	}
 
@@ -155,7 +155,7 @@ func (h *ScheduledMessageHandler) HandleGetScheduledMessage(c *fiber.Ctx) error 
 	msg, err := h.scheduledMessageStore.GetScheduledMessage(c.Context(), guildID, messageID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_message", "The scheduled message does not exist or has expired.")
+			return handlers.NotFound("unknown_message", "The scheduled message does not exist or has expired.")
 		}
 		slog.Error("Failed to get scheduled message", slog.Any("error", err))
 		return err
@@ -188,11 +188,11 @@ func (h *ScheduledMessageHandler) HandleUpdateScheduledMessage(c *fiber.Ctx, req
 	}
 
 	if !req.OnlyOnce && !features.PeriodicScheduledMessages {
-		return helpers.Forbidden("insufficient_plan", "Periodic scheduled messages are not available on your plan.")
+		return handlers.Forbidden("insufficient_plan", "Periodic scheduled messages are not available on your plan.")
 	}
 
 	if req.EndAt.Valid && req.EndAt.Time.Before(req.StartAt) {
-		return helpers.BadRequest("invalid_end_at", "The end_at field must be after the start_at field.")
+		return handlers.BadRequest("invalid_end_at", "The end_at field must be after the start_at field.")
 	}
 
 	if req.StartAt.Before(time.Now().UTC()) {
@@ -204,16 +204,16 @@ func (h *ScheduledMessageHandler) HandleUpdateScheduledMessage(c *fiber.Ctx, req
 		var err error
 		nextAt, err = scheduled_messages.GetFirstCronTick(req.CronExpression.String, req.StartAt, req.CronTimezone.String)
 		if err != nil {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
 		}
 
 		nextNextAt, err := scheduled_messages.GetNextCronTick(req.CronExpression.String, nextAt, req.CronTimezone.String)
 		if err != nil {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is invalid.")
 		}
 
 		if nextNextAt.Sub(nextAt) < time.Minute {
-			return helpers.BadRequest("invalid_cron_expression", "The cron expression is too tight and will trigger too often.")
+			return handlers.BadRequest("invalid_cron_expression", "The cron expression is too tight and will trigger too often.")
 		}
 	}
 
@@ -238,7 +238,7 @@ func (h *ScheduledMessageHandler) HandleUpdateScheduledMessage(c *fiber.Ctx, req
 
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_message", "The scheduled message does not exist.")
+			return handlers.NotFound("unknown_message", "The scheduled message does not exist.")
 		}
 		slog.Error("Failed to update scheduled message", slog.Any("error", err))
 		return err
@@ -264,7 +264,7 @@ func (h *ScheduledMessageHandler) HandleDeleteScheduledMessage(c *fiber.Ctx) err
 	err = h.scheduledMessageStore.DeleteScheduledMessage(c.Context(), guildID, messageID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_message", "The scheduled message does not exist.")
+			return handlers.NotFound("unknown_message", "The scheduled message does not exist.")
 		}
 		slog.Error("Failed to delete scheduled message", slog.Any("error", err))
 		return err

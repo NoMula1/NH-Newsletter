@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -15,7 +16,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"log/slog"
 )
 
 type PremiumHandler struct {
@@ -147,13 +147,13 @@ func (h *PremiumHandler) HandleConsumeEntitlement(c *fiber.Ctx, req wire.Consume
 	entitlement, err := h.entitlementStore.GetEntitlement(c.Context(), entitlementID, session.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return helpers.NotFound("entitlement_not_found", "Entitlement not found")
+			return handlers.NotFound("entitlement_not_found", "Entitlement not found")
 		}
 		return err
 	}
 
 	if entitlement.ConsumedGuildID.Valid {
-		return helpers.BadRequest("entitlement_already_consumed", "Entitlement already consumed")
+		return handlers.BadRequest("entitlement_already_consumed", "Entitlement already consumed")
 	}
 
 	_, err = h.entitlementStore.UpdateEntitlementConsumedGuildID(c.Context(), entitlementID, common.NullID{

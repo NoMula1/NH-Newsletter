@@ -4,8 +4,9 @@ import (
 	"errors"
 	"time"
 
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -13,7 +14,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"log/slog"
 )
 
 type SavedMessagesHandler struct {
@@ -133,7 +133,7 @@ func (h *SavedMessagesHandler) HandleUpdateSavedMessage(c *fiber.Ctx, req wire.S
 
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_message", "The message does not exist.")
+			return handlers.NotFound("unknown_message", "The message does not exist.")
 		}
 		slog.Error("Failed to update saved message", slog.Any("error", err))
 		return err
@@ -167,7 +167,7 @@ func (h *SavedMessagesHandler) HandleDeleteSavedMessage(c *fiber.Ctx) error {
 
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_message", "The message does not exist.")
+			return handlers.NotFound("unknown_message", "The message does not exist.")
 		}
 		slog.Error("Failed to delete saved message", slog.Any("error", err))
 		return err

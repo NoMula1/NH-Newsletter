@@ -4,7 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
+	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 )
 
 type SessionMiddleware struct {
@@ -25,7 +25,7 @@ func (m *SessionMiddleware) SessionRequired() func(c *fiber.Ctx) error {
 		}
 
 		if session == nil {
-			return helpers.Unauthorized("invalid_session", "No valid session, perhaps it expired, try logging in again.")
+			return handlers.Unauthorized("invalid_session", "No valid session, perhaps it expired, try logging in again.")
 		}
 
 		c.Locals("session", session)

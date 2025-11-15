@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -126,7 +125,7 @@ func (h *ImagesHandler) HandleGetImage(c *fiber.Ctx) error {
 	image, err := h.imageStore.GetImage(c.Context(), c.Params("imageID"))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("unknown_image", "Unknown image")
+			return handlers.NotFound("unknown_image", "Unknown image")
 		}
 		return fmt.Errorf("could not get image: %w", err)
 	}
@@ -151,7 +150,7 @@ func (h *ImagesHandler) HandleDownloadImage(c *fiber.Ctx) error {
 		}
 
 		if refererURL.Host != appURL.Host {
-			return helpers.Forbidden("invalid_referer", "Invalid referer")
+			return handlers.Forbidden("invalid_referer", "Invalid referer")
 		}
 	}
 
@@ -161,7 +160,7 @@ func (h *ImagesHandler) HandleDownloadImage(c *fiber.Ctx) error {
 	}
 
 	if file == nil {
-		return helpers.NotFound("unknown_image", "Unknown image")
+		return handlers.NotFound("unknown_image", "Unknown image")
 	}
 
 	c.Set("Content-Type", file.ContentType)

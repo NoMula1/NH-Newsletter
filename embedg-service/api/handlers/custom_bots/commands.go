@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/discordgo"
-	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -120,7 +119,7 @@ func (h *CustomBotsHandler) HandleCreateCustomCommand(c *fiber.Ctx, req wire.Cus
 	}
 
 	if !features.CustomBot {
-		return helpers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
+		return handlers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
 	}
 
 	existingCount, err := h.customCommandStore.CountCustomCommands(c.Context(), guildID)
@@ -129,7 +128,7 @@ func (h *CustomBotsHandler) HandleCreateCustomCommand(c *fiber.Ctx, req wire.Cus
 	}
 
 	if int(existingCount) >= features.MaxCustomCommands {
-		return helpers.Forbidden("insufficient_plan", "You have reached the maximum number of custom commands for your plan!")
+		return handlers.Forbidden("insufficient_plan", "You have reached the maximum number of custom commands for your plan!")
 	}
 
 	actionSet := actions.ActionSet{}
@@ -140,7 +139,7 @@ func (h *CustomBotsHandler) HandleCreateCustomCommand(c *fiber.Ctx, req wire.Cus
 
 	derivedPerms, err := h.actionParser.DerivePermissionsForActions(session.UserID, guildID, 0)
 	if err != nil {
-		return helpers.BadRequest("invalid_actions", err.Error())
+		return handlers.BadRequest("invalid_actions", err.Error())
 	}
 
 	rawParameters, err := json.Marshal(req.Parameters)
@@ -198,7 +197,7 @@ func (h *CustomBotsHandler) HandleUpdateCustomCommand(c *fiber.Ctx, req wire.Cus
 	}
 
 	if !features.CustomBot {
-		return helpers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
+		return handlers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
 	}
 
 	actionSet := actions.ActionSet{}
@@ -209,7 +208,7 @@ func (h *CustomBotsHandler) HandleUpdateCustomCommand(c *fiber.Ctx, req wire.Cus
 
 	derivedPerms, err := h.actionParser.DerivePermissionsForActions(session.UserID, guildID, 0)
 	if err != nil {
-		return helpers.BadRequest("invalid_actions", err.Error())
+		return handlers.BadRequest("invalid_actions", err.Error())
 	}
 
 	rawParameters, err := json.Marshal(req.Parameters)
@@ -260,7 +259,7 @@ func (h *CustomBotsHandler) HandleDeleteCustomCommand(c *fiber.Ctx) error {
 	_, err = h.customCommandStore.DeleteCustomCommand(c.Context(), guildID, c.Params("commandID"))
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("command_not_found", "No command found with this ID")
+			return handlers.NotFound("command_not_found", "No command found with this ID")
 		}
 		return err
 	}
@@ -286,13 +285,13 @@ func (h *CustomBotsHandler) HandleDeployCustomCommands(c *fiber.Ctx) error {
 	}
 
 	if !features.CustomBot {
-		return helpers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
+		return handlers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
 	}
 
 	customBot, err := h.customBotManager.GetCustomBotByGuildID(c.Context(), guildID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return helpers.NotFound("not_configured", "There is no custom bot configured right now, you need to configure one first.")
+			return handlers.NotFound("not_configured", "There is no custom bot configured right now, you need to configure one first.")
 		}
 		return fmt.Errorf("Failed to retrieve custom bot: %w", err)
 	}
