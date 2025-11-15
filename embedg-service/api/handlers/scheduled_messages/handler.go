@@ -14,7 +14,7 @@ import (
 	scheduled_messages "github.com/merlinfuchs/embed-generator/embedg-service/manager/scheduled_message"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 )
 
 type ScheduledMessageHandler struct {
@@ -104,7 +104,7 @@ func (h *ScheduledMessageHandler) HandleCreateScheduledMessage(c *fiber.Ctx, req
 		Enabled:        req.Enabled,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create scheduled message")
+		slog.Error("Failed to create scheduled message", slog.Any("error", err))
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (h *ScheduledMessageHandler) HandleListScheduledMessages(c *fiber.Ctx) erro
 
 	messages, err := h.scheduledMessageStore.GetScheduledMessages(c.Context(), guildID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get scheduled messages")
+		slog.Error("Failed to get scheduled messages", slog.Any("error", err))
 		return err
 	}
 
@@ -157,7 +157,7 @@ func (h *ScheduledMessageHandler) HandleGetScheduledMessage(c *fiber.Ctx) error 
 		if errors.Is(err, store.ErrNotFound) {
 			return helpers.NotFound("unknown_message", "The scheduled message does not exist or has expired.")
 		}
-		log.Error().Err(err).Msg("Failed to get scheduled message")
+		slog.Error("Failed to get scheduled message", slog.Any("error", err))
 		return err
 	}
 
@@ -240,7 +240,7 @@ func (h *ScheduledMessageHandler) HandleUpdateScheduledMessage(c *fiber.Ctx, req
 		if errors.Is(err, store.ErrNotFound) {
 			return helpers.NotFound("unknown_message", "The scheduled message does not exist.")
 		}
-		log.Error().Err(err).Msg("Failed to update scheduled message")
+		slog.Error("Failed to update scheduled message", slog.Any("error", err))
 		return err
 	}
 
@@ -266,7 +266,7 @@ func (h *ScheduledMessageHandler) HandleDeleteScheduledMessage(c *fiber.Ctx) err
 		if errors.Is(err, store.ErrNotFound) {
 			return helpers.NotFound("unknown_message", "The scheduled message does not exist.")
 		}
-		log.Error().Err(err).Msg("Failed to delete scheduled message")
+		slog.Error("Failed to delete scheduled message", slog.Any("error", err))
 		return err
 	}
 

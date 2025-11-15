@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/snowflake/v2"
@@ -16,7 +18,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/template"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 )
 
 const roleErrorMessage = "Failed to add or remove role.\n\n" +
@@ -78,7 +79,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				return nil
 			}
 
-			log.Error().Err(err).Msg("Failed to get message action set")
+			slog.Error("Failed to get message action set", slog.Any("error", err))
 			return err
 		}
 		actionSet = col.Actions
@@ -106,7 +107,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				return nil
 			}
 
-			log.Error().Err(err).Msg("Failed to get custom command action set")
+			slog.Error("Failed to get custom command action set", slog.Any("error", err))
 			return err
 		}
 		actionSet = col.Actions
@@ -172,7 +173,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if !legacyPermissions {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 				if !derivedPerms.CanManageRole(roleID) {
@@ -198,7 +199,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if member := interaction.Member(); member != nil {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 
@@ -225,7 +226,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				}
 			}
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to toggle role")
+				slog.Error("Failed to toggle role", slog.Any("error", err))
 				i.Respond(discord.MessageCreate{
 					Content: roleErrorMessage,
 					Flags:   discord.MessageFlagEphemeral,
@@ -235,7 +236,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if !legacyPermissions {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 				if !derivedPerms.CanManageRole(roleID) {
@@ -250,7 +251,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if member := interaction.Member(); member != nil {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 
@@ -263,7 +264,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 						})
 					}
 				} else {
-					log.Error().Err(err).Msg("Failed to add role")
+					slog.Error("Failed to add role", slog.Any("error", err))
 					i.Respond(discord.MessageCreate{
 						Content: roleErrorMessage,
 						Flags:   discord.MessageFlagEphemeral,
@@ -274,7 +275,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if !legacyPermissions {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 				if !derivedPerms.CanManageRole(roleID) {
@@ -289,7 +290,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if member := interaction.Member(); member != nil {
 				roleID, err := snowflake.Parse(action.TargetID)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed to parse role ID")
+					slog.Error("Failed to parse role ID", slog.Any("error", err))
 					return err
 				}
 
@@ -302,7 +303,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 						})
 					}
 				} else {
-					log.Error().Err(err).Msg("Failed to remove role")
+					slog.Error("Failed to remove role", slog.Any("error", err))
 					i.Respond(discord.MessageCreate{
 						Content: roleErrorMessage,
 						Flags:   discord.MessageFlagEphemeral,
@@ -373,7 +374,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			if newMsg != nil && !legacyPermissions {
 				err = m.parser.CreateActionsForMessage(context.TODO(), data.Actions, *derivedPerms, newMsg.ID, !action.Public)
 				if err != nil {
-					log.Error().Err(err).Msg("failed to create actions for message")
+					slog.Error("failed to create actions for message", slog.Any("error", err))
 					return err
 				}
 			}
@@ -438,7 +439,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 					ephemeral := compInteraction.Message.Flags&discord.MessageFlagEphemeral != 0
 					err = m.parser.CreateActionsForMessage(context.TODO(), data.Actions, *derivedPerms, compInteraction.Message.ID, ephemeral)
 					if err != nil {
-						log.Error().Err(err).Msg("failed to create actions for message")
+						slog.Error("failed to create actions for message", slog.Any("error", err))
 						return err
 					}
 				}
@@ -501,7 +502,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 func executeTemplate(i Interaction, templates *template.TemplateContext, text string) (string, bool) {
 	res, err := templates.ParseAndExecute(text)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to execute template")
+		slog.Error("Failed to execute template", slog.Any("error", err))
 		i.Respond(discord.MessageCreate{
 			Content: fmt.Sprintf("Failed to execute template variables:\n```%s```", err.Error()),
 			Flags:   discord.MessageFlagEphemeral,
@@ -513,7 +514,7 @@ func executeTemplate(i Interaction, templates *template.TemplateContext, text st
 
 func executeTemplateMessage(i Interaction, templates *template.TemplateContext, m *actions.MessageWithActions) bool {
 	if err := templates.ParseAndExecuteMessage(m); err != nil {
-		log.Error().Err(err).Msg("Failed to execute template")
+		slog.Error("Failed to execute template", slog.Any("error", err))
 		i.Respond(discord.MessageCreate{
 			Content: fmt.Sprintf("Failed to execute template variables:\n```%s```", err.Error()),
 			Flags:   discord.MessageFlagEphemeral,

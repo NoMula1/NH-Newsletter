@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"os"
+
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +21,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/premium"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/webhook"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -62,7 +63,8 @@ func Serve(ctx context.Context, env *Env, host string, port int) {
 
 	err := app.Listen(fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to start server")
+		slog.Error("Failed to start server", slog.Any("error", err))
+		os.Exit(1)
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/disgoorg/snowflake/v2"
 	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 	"github.com/spf13/viper"
 )
 
@@ -371,7 +371,7 @@ func (g *EmbedGenerator) handleImageIconCommand(e *handler.CommandEvent) error {
 
 	guild, ok := e.Guild()
 	if !ok {
-		log.Error().Int64("guild_id", int64(*e.GuildID())).Msg("Guild for image command is not in cache")
+		slog.Error("Guild for image command is not in cache", slog.Int64("guild_id", int64(*e.GuildID())))
 		return e.CreateMessage(discord.MessageCreate{
 			Content: "Server is not in cache, please report this!",
 		})

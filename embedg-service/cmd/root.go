@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -46,6 +46,7 @@ var CLI = cli.App{
 
 func Execute() {
 	if err := CLI.Run(os.Args); err != nil {
-		log.Fatal(err)
+		slog.Error("", slog.Any("error", err))
+		os.Exit(1)
 	}
 }

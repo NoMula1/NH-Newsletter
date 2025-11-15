@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"log/slog"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/encrypt"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -44,7 +45,7 @@ func New(config ClientConfig) (*Client, error) {
 		exists, err := client.BucketExists(context.Background(), bucket)
 		if err != nil {
 			if strings.Contains(err.Error(), "connection refused") {
-				log.Warn().Msgf("Failed to check if bucket %s exists, is S3 correctly configured?", bucket)
+				slog.Warn(fmt.Sprintf("Failed to check if bucket %s exists, is S3 correctly configured?", bucket))
 				continue
 			}
 			return nil, fmt.Errorf("Failed to check if bucket %s exists: %w", bucket, err)

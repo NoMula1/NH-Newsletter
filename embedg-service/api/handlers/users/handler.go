@@ -9,7 +9,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 )
 
 type UsersHandler struct {
@@ -44,7 +44,7 @@ func (h *UsersHandler) HandleGetUser(c *fiber.Ctx) error {
 		if errors.Is(err, store.ErrNotFound) {
 			return handlers.NotFound("unknown_user", "The user does not exist.")
 		}
-		log.Error().Err(err).Msg("Failed to get user")
+		slog.Error("Failed to get user", slog.Any("error", err))
 		return err
 	}
 

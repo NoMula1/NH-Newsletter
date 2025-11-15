@@ -6,11 +6,12 @@ import (
 
 	_ "embed"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
-	"github.com/rs/zerolog/log"
 )
 
 //go:embed logo-512.png
@@ -25,7 +26,7 @@ func (m *WebhookManager) SendMessageToChannel(ctx context.Context, channelID com
 	useCustomBot := false
 	restClient, customBot, err := m.customBotManager.GetRestForGuild(ctx, channel.GuildID())
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get custom bot for message username and avatar")
+		slog.Error("failed to get custom bot for message username and avatar", slog.Any("error", err))
 	} else if customBot != nil && params.Username == "" && params.AvatarURL == "" {
 		useCustomBot = true
 	} else if customBot != nil {
@@ -86,7 +87,7 @@ func (m *WebhookManager) UpdateMessageInChannel(ctx context.Context, channelID c
 	useCustomBot := false
 	restClient, customBot, err := m.customBotManager.GetRestForGuild(ctx, channel.GuildID())
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get custom bot for message username and avatar")
+		slog.Error("failed to get custom bot for message username and avatar", slog.Any("error", err))
 	}
 
 	msg, err := restClient.GetMessage(channelID, messageID, rest.WithCtx(ctx))

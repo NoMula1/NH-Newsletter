@@ -15,7 +15,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 )
 
 type PremiumHandler struct {
@@ -61,7 +61,7 @@ func (h *PremiumHandler) HandleGetFeatures(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get premium plan features")
+		slog.Error("Failed to get premium plan features", slog.Any("error", err))
 		return err
 	}
 
@@ -103,7 +103,7 @@ func (h *PremiumHandler) HandleListEntitlements(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get premium entitlements")
+		slog.Error("Failed to get premium entitlements", slog.Any("error", err))
 		return err
 	}
 

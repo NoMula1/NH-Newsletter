@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/cache"
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
@@ -12,7 +14,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -44,7 +45,7 @@ func (h *GuildsHanlder) HandleListGuilds(c *fiber.Ctx) error {
 
 		access, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to check guild access")
+			slog.Error("Failed to check guild access", slog.Any("error", err))
 			return err
 		}
 
@@ -81,7 +82,7 @@ func (h *GuildsHanlder) HandleGetGuild(c *fiber.Ctx) error {
 
 	access, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check guild access")
+		slog.Error("Failed to check guild access", slog.Any("error", err))
 		return err
 	}
 
@@ -118,7 +119,7 @@ func (h *GuildsHanlder) HandleListGuildChannels(c *fiber.Ctx) error {
 	for channel := range channels {
 		access, err := h.am.GetChannelAccessForUser(session.UserID, channel.ID())
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to check channel access")
+			slog.Error("Failed to check channel access", slog.Any("error", err))
 			return err
 		}
 
@@ -138,7 +139,7 @@ func (h *GuildsHanlder) HandleListGuildChannels(c *fiber.Ctx) error {
 	/* for _, channel := range guild.Threads {
 		access, err := h.am.GetChannelAccessForUser(session.UserID, channel.ID)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to check channel access")
+			slog.Error("Failed to check channel access", slog.Any("error", err))
 			return err
 		}
 

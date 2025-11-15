@@ -13,7 +13,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 )
 
 type SavedMessagesHandler struct {
@@ -48,7 +48,7 @@ func (h *SavedMessagesHandler) HandleListSavedMessages(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get saved messages")
+		slog.Error("Failed to get saved messages", slog.Any("error", err))
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (h *SavedMessagesHandler) HandleCreateSavedMessage(c *fiber.Ctx, req wire.S
 		Data:        req.Data,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create saved message")
+		slog.Error("Failed to create saved message", slog.Any("error", err))
 		return err
 	}
 
@@ -135,7 +135,7 @@ func (h *SavedMessagesHandler) HandleUpdateSavedMessage(c *fiber.Ctx, req wire.S
 		if errors.Is(err, store.ErrNotFound) {
 			return helpers.NotFound("unknown_message", "The message does not exist.")
 		}
-		log.Error().Err(err).Msg("Failed to update saved message")
+		slog.Error("Failed to update saved message", slog.Any("error", err))
 		return err
 	}
 
@@ -169,7 +169,7 @@ func (h *SavedMessagesHandler) HandleDeleteSavedMessage(c *fiber.Ctx) error {
 		if errors.Is(err, store.ErrNotFound) {
 			return helpers.NotFound("unknown_message", "The message does not exist.")
 		}
-		log.Error().Err(err).Msg("Failed to delete saved message")
+		slog.Error("Failed to delete saved message", slog.Any("error", err))
 		return err
 	}
 
@@ -205,7 +205,7 @@ func (h *SavedMessagesHandler) HandleImportSavedMessages(c *fiber.Ctx, req wire.
 			Data:        msg.Data,
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to create saved message")
+			slog.Error("Failed to create saved message", slog.Any("error", err))
 			return err
 		}
 		res[i] = savedMessageModelToWire(message)

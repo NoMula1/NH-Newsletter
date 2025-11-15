@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"time"
 
+	"log/slog"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -116,7 +118,8 @@ func (s *SessionManager) DeleteSession(c *fiber.Ctx) error {
 func generateSessionToken() string {
 	b := make([]byte, 35)
 	if _, err := rand.Read(b); err != nil {
-		log.Fatal().Err(err).Msg("failed to generate random bytes for session token")
+		slog.Error("failed to generate random bytes for session token", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	token := base32.HexEncoding.EncodeToString(b)

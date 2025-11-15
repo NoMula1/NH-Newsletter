@@ -19,7 +19,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/webhook"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 	"github.com/vincent-petithory/dataurl"
 )
 
@@ -149,7 +149,7 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 
 	err = h.actionParser.CreateActionsForMessage(c.Context(), data.Actions, permContext, msg.ID, false)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create actions for message")
+		slog.Error("failed to create actions for message", slog.Any("error", err))
 		return err
 	}
 

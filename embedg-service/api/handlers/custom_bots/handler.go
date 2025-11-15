@@ -22,7 +22,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/custom_bot"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 	"github.com/spf13/viper"
 	"gopkg.in/guregu/null.v4"
 )
@@ -265,7 +265,7 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 			UserAvatar:        null.StringFromPtr(member.User.Avatar),
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to update custom bot user info")
+			slog.Error("Failed to update custom bot user info", slog.Any("error", err))
 		}
 	}
 

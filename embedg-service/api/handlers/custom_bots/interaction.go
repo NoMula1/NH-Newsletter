@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/gofiber/fiber/v2"
@@ -16,7 +18,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 )
 
 func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
@@ -46,7 +47,7 @@ func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
 
 	err = h.customBotManager.SetCustomBotHandledFirstInteraction(c.Context(), customBotID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to set custom bot handled first interaction")
+		slog.Error("Failed to set custom bot handled first interaction", slog.Any("error", err))
 	}
 
 	if interaction.Type() == discord.InteractionTypePing {
@@ -79,7 +80,7 @@ func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
 
 			err := h.actionHandler.HandleActionInteraction(client, ri)
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to handle action interaction")
+				slog.Error("Failed to handle action interaction", slog.Any("error", err))
 			}
 		}()
 

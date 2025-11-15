@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
@@ -14,7 +16,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 	"github.com/ravener/discord-oauth2"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"gopkg.in/guregu/null.v4"
@@ -51,14 +52,14 @@ func (h *AuthHandler) HandleAuthRedirect(c *fiber.Ctx) error {
 func (h *AuthHandler) HandleAuthCallback(c *fiber.Ctx) error {
 	state := getOauthStateCookie(c)
 	if state == "" || c.Query("state") != state {
-		log.Error().Msg("Failed to login: Invalid state")
+		slog.Error("Failed to login: Invalid state")
 		// TODO: redirect to error page
 		return h.HandleAuthRedirect(c)
 	}
 
 	_, _, err := h.authenticateWithCode(c, c.Query("code"))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to authenticate with code")
+		slog.Error("Failed to authenticate with code", slog.Any("error", err))
 		// TODO: redirect to error page
 		return h.HandleAuthRedirect(c)
 	}
@@ -70,7 +71,7 @@ func (h *AuthHandler) HandleAuthCallback(c *fiber.Ctx) error {
 func (h *AuthHandler) HandleAuthExchange(c *fiber.Ctx, req wire.AuthExchangeRequestWire) error {
 	tokenData, token, err := h.authenticateWithCode(c, req.Code)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to authenticate with code")
+		slog.Error("Failed to authenticate with code", slog.Any("error", err))
 		return err
 	}
 
@@ -130,13 +131,13 @@ func (h *AuthHandler) authenticateWithCode(c *fiber.Ctx, code string) (*oauth2.T
 		Avatar:        user.Avatar,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to upsert user")
+		slog.Error("Failed to upsert user", slog.Any("error", err))
 		return nil, "", err
 	}
 
 	resp, err = client.Get("https://discord.com/api/users/@me/guilds")
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get guilds")
+		slog.Error("Failed to get guilds", slog.Any("error", err))
 		return nil, "", fmt.Errorf("Failed to get guilds: %w", err)
 	}
 

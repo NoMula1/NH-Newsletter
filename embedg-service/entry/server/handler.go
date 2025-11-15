@@ -11,7 +11,6 @@ import (
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/handler"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 )
 
 type EventHandler struct {
@@ -66,7 +65,7 @@ func (g *EventHandler) onInteractionCreate(event *events.ComponentInteractionCre
 
 		err := g.actionHandler.HandleActionInteraction(g.rest, gi)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to handle action interaction")
+			slog.Error("Failed to handle action interaction", slog.Any("error", err))
 		}
 	}
 }

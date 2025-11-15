@@ -1,9 +1,10 @@
 package session
 
 import (
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-server/api/helpers"
-	"github.com/rs/zerolog/log"
 )
 
 type SessionMiddleware struct {
@@ -37,7 +38,7 @@ func (m *SessionMiddleware) SessionOptional() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		session, err := m.manager.GetSession(c)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to validate session")
+			slog.Error("Failed to validate session", slog.Any("error", err))
 		}
 
 		c.Locals("session", session)

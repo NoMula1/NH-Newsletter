@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"log/slog"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -33,13 +34,13 @@ func (h *SharedMessageHandler) HandleCreateSharedMessage(c *fiber.Ctx, req wire.
 		Data:      req.Data,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create shared message")
+		slog.Error("Failed to create shared message", slog.Any("error", err))
 		return err
 	}
 
 	err = h.sharedMessageStore.DeleteExpiredSharedMessages(c.Context(), time.Now().UTC())
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to delete expired shared messages")
+		slog.Error("Failed to delete expired shared messages", slog.Any("error", err))
 	}
 
 	return c.JSON(wire.SharedMessageCreateResponseWire{
@@ -62,7 +63,7 @@ func (h *SharedMessageHandler) HandleGetSharedMessage(c *fiber.Ctx) error {
 		if errors.Is(err, store.ErrNotFound) {
 			return handlers.NotFound("unknown_message", "The shared message does not exist or has expired.")
 		}
-		log.Error().Err(err).Msg("Failed to get shared message")
+		slog.Error("Failed to get shared message", slog.Any("error", err))
 		return err
 	}
 

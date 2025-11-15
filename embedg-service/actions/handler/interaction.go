@@ -3,10 +3,11 @@ package handler
 import (
 	"fmt"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
-	"github.com/rs/zerolog/log"
 )
 
 type Interaction interface {
@@ -42,7 +43,7 @@ func (i *GenericInteraction) Respond(data discord.InteractionResponseData, t ...
 	if !i.Responded {
 		err = i.RespondFunc(responseType, data)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to respond to interaction")
+			slog.Error("Failed to respond to interaction", slog.Any("error", err))
 		}
 	} else {
 		msgData, ok := data.(discord.MessageCreate)
@@ -54,7 +55,7 @@ func (i *GenericInteraction) Respond(data discord.InteractionResponseData, t ...
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to respond to interaction")
+		slog.Error("Failed to respond to interaction", slog.Any("error", err))
 	} else {
 		i.Responded = true
 	}
@@ -105,7 +106,7 @@ func (i *GatewayInteraction) Respond(data discord.InteractionResponseData, t ...
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to respond to interaction")
+		slog.Error("Failed to respond to interaction", slog.Any("error", err))
 	} else {
 		i.Responded = true
 	}
@@ -153,7 +154,7 @@ func (i *RestInteraction) Respond(data discord.InteractionResponseData, t ...dis
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to respond to interaction")
+		slog.Error("Failed to respond to interaction", slog.Any("error", err))
 	} else {
 		i.Responded = true
 	}

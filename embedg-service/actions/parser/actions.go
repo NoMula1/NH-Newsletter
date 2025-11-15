@@ -8,13 +8,13 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
-	"github.com/rs/zerolog/log"
+	"log/slog"
 )
 
 func (m *ActionParser) CreateActionsForMessage(ctx context.Context, actionSets map[string]actions.ActionSet, derivedPerms actions.ActionDerivedPermissions, messageID common.ID, ephemeral bool) error {
 	err := m.actionSetStore.DeleteMessageActionSetsForMessage(ctx, messageID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to delete message action sets")
+		slog.Error("Failed to delete message action sets", slog.Any("error", err))
 	}
 
 	for actionSetID, actionSet := range actionSets {
@@ -27,7 +27,7 @@ func (m *ActionParser) CreateActionsForMessage(ctx context.Context, actionSets m
 			Ephemeral:          ephemeral,
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to insert message action set")
+			slog.Error("Failed to insert message action set", slog.Any("error", err))
 		}
 	}
 	return nil
