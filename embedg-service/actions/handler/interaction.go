@@ -42,9 +42,6 @@ func (i *GenericInteraction) Respond(data discord.InteractionResponseData, t ...
 
 	if !i.Responded {
 		err = i.RespondFunc(responseType, data)
-		if err != nil {
-			slog.Error("Failed to respond to interaction", slog.Any("error", err))
-		}
 	} else {
 		msgData, ok := data.(discord.MessageCreate)
 		if !ok {

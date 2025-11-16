@@ -133,6 +133,8 @@ func (m *ActionParser) DerivePermissionsForActions(userID common.ID, guildID com
 		UserID: userID,
 	}
 
+	// TODO: Refactor and rely on Stateway for this
+
 	if channelID != 0 {
 		channel, ok := m.caches.Channel(channelID)
 		if !ok {
@@ -156,7 +158,7 @@ func (m *ActionParser) DerivePermissionsForActions(userID common.ID, guildID com
 		if err != nil {
 			return res, err
 		}
-		res.ChannelPermissions = ca.UserPermissions
+		res.ChannelPermissions = uint64(ca.UserPermissions)
 	}
 
 	member, err := m.accessManager.GetGuildMember(guildID, userID)
@@ -169,14 +171,14 @@ func (m *ActionParser) DerivePermissionsForActions(userID common.ID, guildID com
 	defaultRole, ok := m.caches.Role(guildID, guildID)
 	if ok {
 		highestRolePosition = defaultRole.Position
-		res.GuildPermissions = defaultRole.Permissions
+		res.GuildPermissions = uint64(defaultRole.Permissions)
 	}
 
 	for _, roleID := range member.RoleIDs {
 		role, ok := m.caches.Role(guildID, roleID)
 		if ok && role.Position > highestRolePosition {
 			highestRolePosition = role.Position
-			res.GuildPermissions |= role.Permissions
+			res.GuildPermissions |= uint64(role.Permissions)
 		}
 	}
 

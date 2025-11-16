@@ -3,23 +3,46 @@ package custom_bot
 import (
 	"context"
 	"errors"
+	"log/slog"
+	"time"
 
 	disrest "github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
+	"github.com/merlinfuchs/stateway/stateway-lib/gateway"
 )
 
 type CustomBotManager struct {
 	store.CustomBotStore
-	rest disrest.Rest
+	rest    disrest.Rest
+	gateway gateway.Gateway
 }
 
-func NewCustomBotManager(customBotStore store.CustomBotStore, rest disrest.Rest) *CustomBotManager {
+func NewCustomBotManager(customBotStore store.CustomBotStore, rest disrest.Rest, gateway gateway.Gateway) *CustomBotManager {
 	return &CustomBotManager{
 		CustomBotStore: customBotStore,
 		rest:           rest,
+		gateway:        gateway,
+	}
+}
+
+func (m *CustomBotManager) Run(ctx context.Context) {
+	syncTicker := time.NewTicker(time.Minute * 15)
+	defer syncTicker.Stop()
+
+	for {
+		select {
+		case <-syncTicker.C:
+			err := m.SyncCustomBots(ctx)
+			if err != nil {
+				slog.Error("Failed to sync custom bots", slog.Any("error", err))
+				continue
+			}
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 

@@ -26,6 +26,8 @@ func (n *NullID) UnmarshalJSON(data []byte) error {
 		n.Valid = false
 		return nil
 	}
+
+	n.Valid = true
 	return json.Unmarshal(data, &n.ID)
 }
 

@@ -118,19 +118,21 @@ type ActionSet struct {
 }
 
 type ActionDerivedPermissions struct {
-	UserID             common.ID           `json:"user_id"`
-	GuildIsOwner       bool                `json:"guild_is_owner"`
-	GuildPermissions   discord.Permissions `json:"guild_permissions"`
-	ChannelPermissions discord.Permissions `json:"channel_permissions"`
-	AllowedRoleIDs     []common.ID         `json:"lower_role_ids"`
+	UserID             common.ID   `json:"user_id"`
+	GuildIsOwner       bool        `json:"guild_is_owner"`
+	GuildPermissions   uint64      `json:"guild_permissions"`
+	ChannelPermissions uint64      `json:"channel_permissions"`
+	AllowedRoleIDs     []common.ID `json:"lower_role_ids"`
 }
 
 func (a *ActionDerivedPermissions) HasChannelPermission(permission discord.Permissions) bool {
-	return a.GuildIsOwner || (a.GuildPermissions&discord.PermissionAdministrator) != 0 || (a.ChannelPermissions&permission) != 0
+	perms := discord.Permissions(a.ChannelPermissions)
+	return a.GuildIsOwner || perms.Has(discord.PermissionAdministrator) || perms.Has(permission)
 }
 
 func (a *ActionDerivedPermissions) HasGuildPermission(permission discord.Permissions) bool {
-	return a.GuildIsOwner || (a.GuildPermissions&discord.PermissionAdministrator) != 0 || (a.GuildPermissions&permission) != 0
+	perms := discord.Permissions(a.GuildPermissions)
+	return a.GuildIsOwner || perms.Has(discord.PermissionAdministrator) || perms.Has(permission)
 }
 
 func (a *ActionDerivedPermissions) CanManageRole(roleID common.ID) bool {

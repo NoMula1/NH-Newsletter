@@ -24,6 +24,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/custom_bot"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
+	"github.com/merlinfuchs/stateway/stateway-lib/gateway"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -41,6 +42,7 @@ type CustomBotsHandler struct {
 	planStore          store.PlanStore
 	actionParser       *parser.ActionParser
 	actionHandler      *handler.ActionHandler
+	gateway            gateway.Gateway
 }
 
 func New(
@@ -53,6 +55,7 @@ func New(
 	planStore store.PlanStore,
 	actionParser *parser.ActionParser,
 	actionHandler *handler.ActionHandler,
+	gateway gateway.Gateway,
 ) *CustomBotsHandler {
 	return &CustomBotsHandler{
 		config:             config,
@@ -64,6 +67,7 @@ func New(
 		planStore:          planStore,
 		actionParser:       actionParser,
 		actionHandler:      actionHandler,
+		gateway:            gateway,
 	}
 }
 
@@ -138,7 +142,12 @@ func (h *CustomBotsHandler) HandleConfigureCustomBot(c *fiber.Ctx, req wire.Cust
 		CreatedAt:         time.Now().UTC(),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to upsert custom bot: %w", err)
+	}
+
+	_, err = h.gateway.UpsertApp(c.Context(), custom_bot.AppFromCustomBot(customBot))
+	if err != nil {
+		return fmt.Errorf("failed to upsert custom bot app in gateway: %w", err)
 	}
 
 	return c.JSON(wire.CustomBotConfigureResponseWire{
@@ -186,7 +195,7 @@ func (h *CustomBotsHandler) HandleUpdateCustomBotPresence(c *fiber.Ctx, req wire
 		return handlers.Forbidden("insufficient_plan", "This feature is not available on your plan!")
 	}
 
-	_, err = h.customBotManager.UpdateCustomBotPresence(c.Context(), store.UpdateCustomBotPresenceParams{
+	customBot, err := h.customBotManager.UpdateCustomBotPresence(c.Context(), store.UpdateCustomBotPresenceParams{
 		GuildID:              guildID,
 		GatewayStatus:        req.GatewayStatus,
 		GatewayActivityType:  null.IntFrom(int64(req.GatewayActivityType)),
@@ -198,7 +207,12 @@ func (h *CustomBotsHandler) HandleUpdateCustomBotPresence(c *fiber.Ctx, req wire
 		if errors.Is(err, store.ErrNotFound) {
 			return handlers.NotFound("not_configured", "There is no custom bot configured right now")
 		}
-		return err
+		return fmt.Errorf("failed to update custom bot presence: %w", err)
+	}
+
+	_, err = h.gateway.UpsertApp(c.Context(), custom_bot.AppFromCustomBot(customBot))
+	if err != nil {
+		return fmt.Errorf("failed to upsert custom bot app in gateway: %w", err)
 	}
 
 	return c.JSON(wire.CustomBotUpdatePresenceResponseWire{
@@ -217,12 +231,17 @@ func (h *CustomBotsHandler) HandleDisableCustomBot(c *fiber.Ctx) error {
 		return err
 	}
 
-	_, err = h.customBotManager.DeleteCustomBot(c.Context(), guildID)
+	customBot, err := h.customBotManager.DeleteCustomBot(c.Context(), guildID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return handlers.NotFound("not_configured", "There is no custom bot configured right now")
 		}
-		return err
+		return fmt.Errorf("failed to delete custom bot: %w", err)
+	}
+
+	err = h.gateway.DeleteApp(c.Context(), customBot.ApplicationID)
+	if err != nil {
+		return fmt.Errorf("failed to delete custom bot app in gateway: %w", err)
 	}
 
 	return c.JSON(wire.CustomBotDisableResponseWire{
@@ -289,6 +308,8 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 			}
 		}
 	}
+
+	// TODO: Get additional information from gateway
 
 	return c.JSON(wire.CustomBotGetResponseWire{
 		Success: true,

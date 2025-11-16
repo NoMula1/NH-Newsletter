@@ -331,9 +331,8 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				return nil
 			}
 
-			var flags discord.MessageFlags
 			if !action.Public {
-				flags = discord.MessageFlagEphemeral
+				data.Flags |= discord.MessageFlagEphemeral
 			}
 
 			var components []discord.LayoutComponent
@@ -358,15 +357,15 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 			// We need to get the message id of the response, so it has to be a followup response
 			if !i.HasResponded() {
 				i.Respond(discord.MessageCreate{
-					Flags: flags,
-				})
+					Flags: data.Flags,
+				}, discord.InteractionResponseTypeDeferredCreateMessage)
 			}
 
 			newMsg := i.Respond(discord.MessageCreate{
 				Content:    data.Content,
 				Embeds:     data.Embeds,
 				Components: components,
-				Flags:      flags,
+				Flags:      data.Flags,
 				AllowedMentions: &discord.AllowedMentions{
 					Parse: allowedMentions,
 				},
@@ -396,9 +395,9 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				return nil
 			}
 
-			i.Respond(discord.MessageCreate{
-				Content: content,
-			})
+			i.Respond(discord.MessageUpdate{
+				Content: &content,
+			}, discord.InteractionResponseTypeUpdateMessage)
 		case actions.ActionTypeSavedMessageEdit:
 			if interaction.Type() != discord.InteractionTypeComponent || interaction.GuildID() == nil {
 				continue
@@ -432,6 +431,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				Content:    data.Content,
 				Embeds:     data.Embeds,
 				Components: components,
+				Flags:      data.Flags,
 			})
 
 			if !legacyPermissions {
@@ -487,7 +487,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 
 	if !i.HasResponded() {
 		if interaction.Type() == discord.InteractionTypeComponent {
-			i.Respond(discord.MessageCreate{})
+			i.Respond(discord.MessageCreate{}, discord.InteractionResponseTypeDeferredUpdateMessage)
 		} else {
 			i.Respond(discord.MessageCreate{
 				Content: "No response",
