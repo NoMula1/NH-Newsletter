@@ -2,6 +2,7 @@ package embedg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -238,9 +239,35 @@ func (g *EmbedGenerator) SyncCommands(ctx context.Context) error {
 	return nil
 }
 
-func (g *EmbedGenerator) interactionMux() *handler.Mux {
-	mx := handler.New()
-	mx.Use(middleware.Logger)
+func (g *EmbedGenerator) interactionMux() handler.Router {
+	mx := handler.New().
+		With(middleware.GoErr(func(e *handler.InteractionEvent, err error) {
+			slog.Error(
+				"Error while handling interaction",
+				slog.Int("interaction_type", int(e.Interaction.Type())),
+				slog.String("interaction_id", e.Interaction.ID().String()),
+				slog.Any("error", err),
+			)
+
+			errorMessage := discord.MessageCreate{
+				Content: fmt.Sprintf(
+					"An error occurred while handling this interaction. Please report this: ```%s```",
+					err.Error(),
+				),
+				Flags: discord.MessageFlagEphemeral,
+			}
+
+			respErr := e.Respond(discord.InteractionResponseTypeCreateMessage, errorMessage)
+			if errors.Is(respErr, discord.ErrInteractionAlreadyReplied) ||
+				common.IsDiscordRestErrorCode(respErr, 40060) {
+				_, _ = e.Client().Rest.CreateFollowupMessage(
+					e.Interaction.ApplicationID(),
+					e.Interaction.Token(),
+					errorMessage,
+				)
+			}
+		}))
+
 	mx.Command("/invite", g.handleHelpCommand)
 	mx.Command("/website", g.handleHelpCommand)
 	mx.Command("/help", g.handleHelpCommand)
