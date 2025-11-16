@@ -105,7 +105,7 @@ func (h *ImagesHandler) HandleUploadImage(c *fiber.Ctx) error {
 	}
 
 	image, err := h.imageStore.CreateImage(c.Context(), model.Image{
-		ID:     common.UniqueID().String(),
+		ID:     common.InternalID(),
 		UserID: session.UserID,
 		GuildID: common.NullID{
 			Valid: guildID != 0,

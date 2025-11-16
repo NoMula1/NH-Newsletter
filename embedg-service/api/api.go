@@ -8,7 +8,6 @@ import (
 
 	"os"
 
-	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
@@ -107,7 +106,6 @@ type Env struct {
 	ActionParser          *parser.ActionParser
 	ActionHandler         *handler.ActionHandler
 	Gateway               gateway.Gateway
-	Client                *bot.Client
 	Caches                cache.Caches
 	Rest                  rest.Rest
 	OpenAIClient          *openai.Client

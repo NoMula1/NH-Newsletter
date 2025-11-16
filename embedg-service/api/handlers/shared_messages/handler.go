@@ -33,7 +33,7 @@ func New(config SharedMessageHandlerConfig, sharedMessageStore store.SharedMessa
 
 func (h *SharedMessageHandler) HandleCreateSharedMessage(c *fiber.Ctx, req wire.SharedMessageCreateRequestWire) error {
 	msg, err := h.sharedMessageStore.CreateSharedMessage(c.Context(), model.SharedMessage{
-		ID:        common.UniqueID().String(),
+		ID:        common.InternalID(),
 		CreatedAt: time.Now().UTC(),
 		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 7),
 		Data:      req.Data,

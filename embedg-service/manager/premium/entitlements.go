@@ -55,7 +55,7 @@ func (m *PremiumManager) handleEntitlement(entitlement discord.Entitlement) {
 }
 
 func (m *PremiumManager) SyncEntitlements(ctx context.Context) error {
-	var after int
+	var after common.ID
 	for {
 		entitlements, err := m.rest.GetEntitlements(m.appContext.ApplicationID(), rest.GetEntitlementsParams{
 			Limit: 100,
@@ -71,7 +71,7 @@ func (m *PremiumManager) SyncEntitlements(ctx context.Context) error {
 
 		for _, entitlement := range entitlements {
 			m.handleEntitlement(entitlement)
-			after = int(entitlement.ID)
+			after = entitlement.ID
 		}
 	}
 	return nil

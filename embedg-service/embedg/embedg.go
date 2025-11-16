@@ -7,6 +7,7 @@ import (
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	discache "github.com/disgoorg/disgo/cache"
+	"github.com/disgoorg/disgo/events"
 	disrest "github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
@@ -57,6 +58,7 @@ func NewEmbedGenerator(
 	client, err := disgo.New(
 		config.Token,
 		bot.WithGateway(compatGateway),
+		bot.WithEventManagerConfigOpts(bot.WithAsyncEventsEnabled()),
 		bot.WithRest(rest.NewRestClient(config.Token)),
 	)
 	if err != nil {
@@ -114,4 +116,12 @@ func (g *EmbedGenerator) AppInviteURL() string {
 
 func (g *EmbedGenerator) ApplicationID() common.ID {
 	return g.client.ApplicationID
+}
+
+func (g *EmbedGenerator) GenericEvent() *events.GenericEvent {
+	return events.NewGenericEvent(g.client, 0, 0)
+}
+
+func (g *EmbedGenerator) DispatchEvent(event bot.Event) {
+	g.client.EventManager.DispatchEvent(event)
 }

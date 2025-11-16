@@ -112,7 +112,7 @@ func (m *ActionParser) ParseMessageComponent(data actions.ComponentWithActions, 
 		}
 
 		return discord.StringSelectMenuComponent{
-			CustomID:    "action:options:" + common.UniqueID().String(),
+			CustomID:    "action:options:" + common.InternalID(),
 			Placeholder: data.Placeholder,
 			MinValues:   data.MinValues,
 			MaxValues:   data.MaxValues,

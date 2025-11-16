@@ -148,7 +148,7 @@ func (h *CustomBotsHandler) HandleCreateCustomCommand(c *fiber.Ctx, req wire.Cus
 	}
 
 	command, err := h.customCommandStore.CreateCustomCommand(c.Context(), model.CustomCommand{
-		ID:                 common.UniqueID().String(),
+		ID:                 common.InternalID(),
 		GuildID:            guildID,
 		Name:               req.Name,
 		Description:        req.Description,

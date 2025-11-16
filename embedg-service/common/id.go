@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/disgoorg/snowflake/v2"
+	gonanoid "github.com/matoous/go-nanoid"
 )
 
 type ID = snowflake.ID
@@ -31,7 +32,12 @@ func (n *NullID) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &n.ID)
 }
 
-func UniqueID() snowflake.ID {
+func InternalID() string {
+	id, _ := gonanoid.Generate("abcdefghijklmnopqrstuvwxyzAPCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 8)
+	return id
+}
+
+func SnowflakeID() snowflake.ID {
 	return snowflake.New(time.Now().UTC())
 }
 

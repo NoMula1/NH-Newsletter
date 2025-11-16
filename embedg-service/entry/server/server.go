@@ -54,7 +54,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 	handler := NewEventHandler(embedg.Rest(), pg, actionHandler)
 	embedg.Client().AddEventListeners(handler)
 
-	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest(), embedg.Gateway())
+	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest(), embedg.Gateway(), nil)
 	go customBotManager.Run(ctx)
 
 	sessionManager := session.New(session.SessionManagerConfig{
@@ -101,14 +101,13 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		AccessManager:         accessManager,
 		ActionParser:          actionParser,
 		ActionHandler:         actionHandler,
-		Client:                embedg.Client(),
 		Gateway:               embedg.Gateway(),
 		Caches:                embedg.Caches(),
 		Rest:                  embedg.Rest(),
 		OpenAIClient:          openai.NewClient(cfg.OpenAI.APIKey),
 		FileStore:             blob,
 		AppContext:            embedg,
-		EventDispatcher:       embedg.Client().EventManager,
+		EventDispatcher:       embedg,
 	}, api.APIConfig{
 		Host:                cfg.API.Host,
 		Port:                cfg.API.Port,

@@ -77,7 +77,7 @@ func (h *SavedMessagesHandler) HandleCreateSavedMessage(c *fiber.Ctx, req wire.S
 	}
 
 	message, err := h.savedMessageStore.CreateSavedMessage(c.Context(), model.SavedMessage{
-		ID:          common.UniqueID().String(),
+		ID:          common.InternalID(),
 		CreatorID:   session.UserID,
 		GuildID:     guildID,
 		UpdatedAt:   time.Now().UTC(),
@@ -196,7 +196,7 @@ func (h *SavedMessagesHandler) HandleImportSavedMessages(c *fiber.Ctx, req wire.
 
 	for i, msg := range req.Messages {
 		message, err := h.savedMessageStore.CreateSavedMessage(c.Context(), model.SavedMessage{
-			ID:          common.UniqueID().String(),
+			ID:          common.InternalID(),
 			CreatorID:   session.UserID,
 			GuildID:     guildID,
 			UpdatedAt:   time.Now().UTC(),

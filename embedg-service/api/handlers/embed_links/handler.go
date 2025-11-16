@@ -33,7 +33,7 @@ func New(config EmbedLinksHandlerConfig, embedLinkStore store.EmbedLinkStore) *E
 
 func (h *EmbedLinksHandler) HandleCreateEmbedLink(c *fiber.Ctx, req wire.EmbedLinkCreateRequestWire) error {
 	row, err := h.embedLinkStore.CreateEmbedLink(c.Context(), model.EmbedLink{
-		ID:             common.UniqueID().String(),
+		ID:             common.InternalID(),
 		OgTitle:        req.OgTitle,
 		Url:            req.Url,
 		ThemeColor:     req.ThemeColor,

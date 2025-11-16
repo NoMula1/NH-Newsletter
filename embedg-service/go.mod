@@ -7,7 +7,7 @@ require (
 	github.com/adhocore/gronx v1.19.6
 	github.com/botlabs-gg/yagpdb/v2 v2.66.1
 	github.com/cyrusaf/ctxlog v1.3.3
-	github.com/disgoorg/disgo v0.19.0-rc.11
+	github.com/disgoorg/disgo v0.19.0-rc.12.0.20251115214104-b87315440ac4
 	github.com/disgoorg/omit v1.0.0
 	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
@@ -21,6 +21,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.2.0
 	github.com/knadh/koanf/providers/rawbytes v1.0.0
 	github.com/knadh/koanf/v2 v2.3.0
+	github.com/matoous/go-nanoid v1.5.1
 	github.com/merlinfuchs/discordgo v0.0.0-20251108151703-8f057be56eb6
 	github.com/merlinfuchs/embed-generator/embedg-app v0.0.0
 	github.com/merlinfuchs/embed-generator/embedg-site v0.0.0

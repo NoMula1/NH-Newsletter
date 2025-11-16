@@ -11,6 +11,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
+	"github.com/merlinfuchs/stateway/stateway-lib/broker"
 	"github.com/merlinfuchs/stateway/stateway-lib/gateway"
 )
 
@@ -18,13 +19,20 @@ type CustomBotManager struct {
 	store.CustomBotStore
 	rest    disrest.Rest
 	gateway gateway.Gateway
+	broker  broker.Broker
 }
 
-func NewCustomBotManager(customBotStore store.CustomBotStore, rest disrest.Rest, gateway gateway.Gateway) *CustomBotManager {
+func NewCustomBotManager(
+	customBotStore store.CustomBotStore,
+	rest disrest.Rest,
+	gateway gateway.Gateway,
+	broker broker.Broker,
+) *CustomBotManager {
 	return &CustomBotManager{
 		CustomBotStore: customBotStore,
 		rest:           rest,
 		gateway:        gateway,
+		broker:         broker,
 	}
 }
 

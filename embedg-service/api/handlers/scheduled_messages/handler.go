@@ -84,7 +84,7 @@ func (h *ScheduledMessageHandler) HandleCreateScheduledMessage(c *fiber.Ctx, req
 	}
 
 	msg, err := h.scheduledMessageStore.CreateScheduledMessage(c.Context(), model.ScheduledMessage{
-		ID:             common.UniqueID().String(),
+		ID:             common.InternalID(),
 		CreatorID:      session.UserID,
 		GuildID:        guildID,
 		ChannelID:      req.ChannelID,

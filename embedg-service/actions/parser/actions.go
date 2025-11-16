@@ -19,7 +19,7 @@ func (m *ActionParser) CreateActionsForMessage(ctx context.Context, actionSets m
 
 	for actionSetID, actionSet := range actionSets {
 		_, err = m.actionSetStore.CreateMessageActionSet(ctx, model.MessageActionSet{
-			ID:                 common.UniqueID().String(),
+			ID:                 common.InternalID(),
 			MessageID:          messageID,
 			SetID:              actionSetID,
 			Actions:            actionSet,

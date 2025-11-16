@@ -131,7 +131,7 @@ func (h *CustomBotsHandler) HandleConfigureCustomBot(c *fiber.Ctx, req wire.Cust
 	}
 
 	customBot, err := h.customBotManager.UpsertCustomBot(c.Context(), model.CustomBot{
-		ID:                common.UniqueID().String(),
+		ID:                common.InternalID(),
 		GuildID:           guildID,
 		ApplicationID:     app.ID,
 		UserID:            user.ID,
@@ -313,7 +313,7 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 	app, err := h.gateway.GetApp(c.Context(), customBot.ApplicationID, false)
 	if err != nil {
 		if service.IsErrorCode(err, service.ErrorCodeNotFound) {
-			return handlers.NotFound("not_configured", "There is no custom bot configured right now")
+			return fmt.Errorf("custom bot app not found in gateway: %w", err)
 		}
 		return fmt.Errorf("failed to get custom bot app in gateway: %w", err)
 	}

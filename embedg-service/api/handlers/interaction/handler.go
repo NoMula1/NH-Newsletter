@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
+	"sync"
 	"time"
 
-	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
@@ -20,15 +20,13 @@ type InteractionHandlerConfig struct {
 }
 
 type InteractionHandler struct {
-	client     *bot.Client
 	config     InteractionHandlerConfig
 	dispatcher store.EventDispatcher
 	rest       rest.Rest
 }
 
-func New(config InteractionHandlerConfig, client *bot.Client, dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
+func New(config InteractionHandlerConfig, dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
 	return &InteractionHandler{
-		client:     client,
 		config:     config,
 		dispatcher: dispatcher,
 		rest:       rest,
@@ -53,26 +51,50 @@ func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
 
 	respCh := make(chan *discord.InteractionResponse)
 
+	var (
+		responded bool
+		expired   bool
+		mu        sync.Mutex
+	)
+
 	respondFunc := func(responseType discord.InteractionResponseType, data discord.InteractionResponseData, opts ...rest.RequestOpt) error {
+		mu.Lock()
+		defer mu.Unlock()
+
+		if responded {
+			return discord.ErrInteractionAlreadyReplied
+		}
+
+		if expired {
+			return discord.ErrInteractionExpired
+		}
+
 		respCh <- &discord.InteractionResponse{
 			Type: responseType,
 			Data: data,
 		}
+		responded = true
 		return nil
 	}
 
 	go h.dispatcher.DispatchEvent(&events.InteractionCreate{
-		GenericEvent: events.NewGenericEvent(h.client, 0, 0),
+		GenericEvent: h.dispatcher.GenericEvent(),
 		Interaction:  interaction,
 		Respond:      respondFunc,
 	})
 
 	select {
 	case resp := <-respCh:
+		mu.Lock()
+		expired = true
+		mu.Unlock()
 		return c.JSON(resp)
 	case <-c.Context().Done():
 		return c.SendStatus(fiber.StatusNoContent)
 	case <-time.After(3 * time.Second):
+		mu.Lock()
+		expired = true
+		mu.Unlock()
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 }
