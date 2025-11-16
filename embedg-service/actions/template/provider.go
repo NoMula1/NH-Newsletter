@@ -2,7 +2,7 @@ package template
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -169,7 +169,7 @@ func (kv *KVProvider) increaseKey(key string, delta int) (string, error) {
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, store.ErrNotFound) {
 			return "", nil
 		}
 		return "", err
@@ -180,7 +180,7 @@ func (kv *KVProvider) increaseKey(key string, delta int) (string, error) {
 func (kv *KVProvider) deleteKey(key string) (string, error) {
 	entry, err := kv.kvStore.DeleteKVEntry(context.TODO(), kv.guildID, key)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, store.ErrNotFound) {
 			return "", nil
 		}
 		return "", err

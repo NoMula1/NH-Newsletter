@@ -31,7 +31,6 @@ func (s *Client) UploadFileIfNotExists(ctx context.Context, image model.File) er
 	exists, err := s.client.StatObject(ctx, imagesBucketName, image.FileName, minio.StatObjectOptions{
 		ServerSideEncryption: s.encryption,
 	})
-	// TODO: refactor to not use error string
 	if err != nil && err.Error() != "The specified key does not exist." {
 		return err
 	}

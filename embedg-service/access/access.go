@@ -46,7 +46,7 @@ func (c *ChannelAccess) BotAccess() bool {
 func (m *AccessManager) GetGuildAccessForUser(userID common.ID, guildID common.ID) (GuildAccess, error) {
 	res := GuildAccess{}
 
-	// TODO: Use Stateway MassComputeChannelPermissions
+	// TODO?: Use Stateway MassComputeChannelPermissions
 
 	guild, ok := m.caches.Guild(guildID)
 	if !ok {

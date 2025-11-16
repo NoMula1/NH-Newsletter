@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/base32"
+	"errors"
 	"fmt"
 	"time"
 
@@ -55,7 +55,7 @@ func (s *SessionManager) GetSession(c *fiber.Ctx) (*Session, error) {
 
 	model, err := s.sessionStore.GetSession(c.Context(), tokenHash)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, store.ErrNotFound) {
 			return nil, nil
 		}
 		return nil, err

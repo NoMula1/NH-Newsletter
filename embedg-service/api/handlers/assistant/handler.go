@@ -11,7 +11,7 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-// TODO: investigate https://github.com/1rgs/jsonformer
+// TODO?: investigate https://github.com/1rgs/jsonformer
 
 type AssistantHandler struct {
 	am           *access.AccessManager

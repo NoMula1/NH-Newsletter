@@ -61,14 +61,12 @@ func (h *AuthHandler) HandleAuthRedirect(c *fiber.Ctx) error {
 func (h *AuthHandler) HandleAuthCallback(c *fiber.Ctx) error {
 	state := h.getOauthStateCookie(c)
 	if state == "" || c.Query("state") != state {
-		slog.Error("Failed to login: Invalid state")
 		// TODO: redirect to error page
 		return h.HandleAuthRedirect(c)
 	}
 
 	_, _, err := h.authenticateWithCode(c, c.Query("code"))
 	if err != nil {
-		slog.Error("Failed to authenticate with code", slog.Any("error", err))
 		// TODO: redirect to error page
 		return h.HandleAuthRedirect(c)
 	}

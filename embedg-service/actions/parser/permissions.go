@@ -133,7 +133,7 @@ func (m *ActionParser) DerivePermissionsForActions(userID common.ID, guildID com
 		UserID: userID,
 	}
 
-	// TODO: Refactor and rely on Stateway for this
+	// TODO?: Refactor and rely on Stateway for this
 
 	if channelID != 0 {
 		channel, ok := m.caches.Channel(channelID)

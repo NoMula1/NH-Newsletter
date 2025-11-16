@@ -111,7 +111,6 @@ func (h *GuildsHanlder) HandleListGuildChannels(c *fiber.Ctx) error {
 		return err
 	}
 
-	// TODO: validate that this contains both channels and threads
 	channels := h.caches.ChannelsForGuild(guildID)
 
 	res := make([]wire.GuildChannelWire, 0)
@@ -135,26 +134,6 @@ func (h *GuildsHanlder) HandleListGuildChannels(c *fiber.Ctx) error {
 			BotPermissions:  fmt.Sprintf("%d", access.BotPermissions),
 		})
 	}
-
-	/* for _, channel := range guild.Threads {
-		access, err := h.am.GetChannelAccessForUser(session.UserID, channel.ID)
-		if err != nil {
-			slog.Error("Failed to check channel access", slog.Any("error", err))
-			return err
-		}
-
-		res = append(res, wire.GuildChannelWire{
-			ID:              channel.ID,
-			Name:            channel.Name,
-			Position:        channel.Position,
-			ParentID:        null.NewString(channel.ParentID, channel.ParentID != ""),
-			Type:            int(channel.Type),
-			UserAccess:      access.UserAccess(),
-			UserPermissions: fmt.Sprintf("%d", access.UserPermissions),
-			BotAccess:       access.BotAccess(),
-			BotPermissions:  fmt.Sprintf("%d", access.BotPermissions),
-		})
-	} */
 
 	return c.JSON(wire.ListChannelsResponseWire{
 		Success: true,

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -50,7 +50,7 @@ func New(
 	}
 }
 
-func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) error {
+func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interaction) error {
 	interaction := i.Interaction()
 
 	var actionSet actions.ActionSet
@@ -75,7 +75,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 
 		col, err := m.actionSetStore.GetMessageActionSet(context.TODO(), compInteraction.Message.ID, actionSetID)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, store.ErrNotFound) {
 				return nil
 			}
 
@@ -88,13 +88,11 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 		appCommandInteraction := interaction.(discord.ApplicationCommandInteraction)
 		slashData := appCommandInteraction.SlashCommandInteractionData()
 		fullName := slashData.CommandName()
-		for _, opt := range slashData.All() {
-			if opt.Type == discord.ApplicationCommandOptionTypeSubCommand {
-				fullName += " " + opt.Name
-			} else if opt.Type == discord.ApplicationCommandOptionTypeSubCommandGroup {
-				fullName += " " + opt.Name
-				// TODO: Handle subcommand group options properly
-			}
+		if slashData.SubCommandGroupName != nil {
+			fullName += " " + *slashData.SubCommandGroupName
+		}
+		if slashData.SubCommandName != nil {
+			fullName += " " + *slashData.SubCommandName
 		}
 
 		if interaction.GuildID() == nil {
@@ -103,7 +101,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 
 		col, err := m.customCommandStore.GetCustomCommandByName(context.TODO(), *interaction.GuildID(), fullName)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, store.ErrNotFound) {
 				return nil
 			}
 
@@ -204,7 +202,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				}
 
 				if hasRole {
-					err = rest.RemoveMemberRole(*interaction.GuildID(), member.User.ID, roleID)
+					err = restClient.RemoveMemberRole(*interaction.GuildID(), member.User.ID, roleID)
 					if err == nil {
 						if !action.DisableDefaultResponse {
 							i.Respond(discord.MessageCreate{
@@ -214,7 +212,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 						}
 					}
 				} else {
-					err = rest.AddMemberRole(*interaction.GuildID(), member.User.ID, roleID)
+					err = restClient.AddMemberRole(*interaction.GuildID(), member.User.ID, roleID)
 					if err == nil {
 						if !action.DisableDefaultResponse {
 							i.Respond(discord.MessageCreate{
@@ -255,7 +253,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 					return err
 				}
 
-				err = rest.AddMemberRole(*interaction.GuildID(), member.User.ID, roleID)
+				err = restClient.AddMemberRole(*interaction.GuildID(), member.User.ID, roleID)
 				if err == nil {
 					if !action.DisableDefaultResponse {
 						i.Respond(discord.MessageCreate{
@@ -294,7 +292,7 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 					return err
 				}
 
-				err = rest.RemoveMemberRole(*interaction.GuildID(), member.User.ID, roleID)
+				err = restClient.RemoveMemberRole(*interaction.GuildID(), member.User.ID, roleID)
 				if err == nil {
 					if !action.DisableDefaultResponse {
 						i.Respond(discord.MessageCreate{
@@ -378,17 +376,62 @@ func (m *ActionHandler) HandleActionInteraction(rest rest.Rest, i Interaction) e
 				}
 			}
 		case actions.ActionTypeTextDM:
-			// TODO: Fix DM functionality - need to implement with disgo
-			i.Respond(discord.MessageCreate{
-				Content: "DM functionality not yet implemented with disgo",
-				Flags:   discord.MessageFlagEphemeral,
-			})
+			channel, err := restClient.CreateDMChannel(interaction.User().ID, rest.WithCtx(context.TODO()))
+			if err != nil {
+				slog.Error("Failed to create DM channel", slog.Any("error", err))
+				return fmt.Errorf("failed to create DM channel: %w", err)
+			}
+
+			_, err = restClient.CreateMessage(channel.ID(), discord.MessageCreate{
+				Content: action.Text,
+			}, rest.WithCtx(context.TODO()))
+			if err != nil {
+				slog.Error("Failed to send DM", slog.Any("error", err))
+				return fmt.Errorf("failed to send DM: %w", err)
+			}
 		case actions.ActionTypeSavedMessageDM:
-			// TODO: Fix DM functionality - need to implement with disgo
-			i.Respond(discord.MessageCreate{
-				Content: "DM functionality not yet implemented with disgo",
-				Flags:   discord.MessageFlagEphemeral,
-			})
+			if interaction.GuildID() == nil {
+				continue
+			}
+
+			msg, err := m.savedMessageStore.GetSavedMessageForGuild(context.TODO(), *interaction.GuildID(), action.TargetID)
+			if err != nil {
+				return err
+			}
+
+			data := &actions.MessageWithActions{}
+			err = json.Unmarshal(msg.Data, data)
+			if err != nil {
+				return err
+			}
+
+			// TODO: Fix variables system - variables.FillMessage(data)
+			if !executeTemplateMessage(i, templates, data) {
+				return nil
+			}
+
+			// We support displaying components in DMs, but don't hook them up to actions
+			components, err := m.parser.ParseMessageComponents(data.Components, features.ComponentTypes)
+			if err != nil {
+				return fmt.Errorf("Invalid actions: %w", err)
+			}
+
+			channel, err := restClient.CreateDMChannel(interaction.User().ID, rest.WithCtx(context.TODO()))
+			if err != nil {
+				slog.Error("Failed to create DM channel", slog.Any("error", err))
+				return fmt.Errorf("failed to create DM channel: %w", err)
+			}
+
+			_, err = restClient.CreateMessage(channel.ID(), discord.MessageCreate{
+				Content:    data.Content,
+				Embeds:     data.Embeds,
+				Components: components,
+				Flags:      data.Flags,
+			}, rest.WithCtx(context.TODO()))
+			if err != nil {
+				slog.Error("Failed to send DM", slog.Any("error", err))
+				return fmt.Errorf("failed to send DM: %w", err)
+			}
 		case actions.ActionTypeTextEdit:
 			content, ok := executeTemplate(i, templates, action.Text) // TODO: Fix variables system
 			if !ok {

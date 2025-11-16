@@ -1,7 +1,6 @@
 package premium
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -146,7 +145,7 @@ func (h *PremiumHandler) HandleConsumeEntitlement(c *fiber.Ctx, req wire.Consume
 
 	entitlement, err := h.entitlementStore.GetEntitlement(c.Context(), entitlementID, session.UserID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, store.ErrNotFound) {
 			return handlers.NotFound("entitlement_not_found", "Entitlement not found")
 		}
 		return err
