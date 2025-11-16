@@ -21,6 +21,10 @@ type CustomBotInfoWire struct {
 	UserDiscriminator string      `json:"user_discriminator"`
 	UserAvatar        null.String `json:"user_avatar"`
 
+	Disabled        bool   `json:"disabled"`
+	DisabledCode    string `json:"disabled_code,omitempty"`
+	DisabledMessage string `json:"disabled_message,omitempty"`
+
 	TokenValid              bool   `json:"token_valid"`
 	IsMember                bool   `json:"is_member"`
 	HasPermissions          bool   `json:"has_permissions"`

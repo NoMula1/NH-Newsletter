@@ -25,6 +25,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 	"github.com/merlinfuchs/stateway/stateway-lib/gateway"
+	"github.com/merlinfuchs/stateway/stateway-lib/service"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -309,7 +310,13 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 		}
 	}
 
-	// TODO: Get additional information from gateway
+	app, err := h.gateway.GetApp(c.Context(), customBot.ApplicationID, false)
+	if err != nil {
+		if service.IsErrorCode(err, service.ErrorCodeNotFound) {
+			return handlers.NotFound("not_configured", "There is no custom bot configured right now")
+		}
+		return fmt.Errorf("failed to get custom bot app in gateway: %w", err)
+	}
 
 	return c.JSON(wire.CustomBotGetResponseWire{
 		Success: true,
@@ -320,6 +327,10 @@ func (h *CustomBotsHandler) HandleGetCustomBot(c *fiber.Ctx) error {
 			UserName:          customBot.UserName,
 			UserDiscriminator: customBot.UserDiscriminator,
 			UserAvatar:        customBot.UserAvatar,
+
+			Disabled:        app.Disabled,
+			DisabledCode:    string(app.DisabledCode),
+			DisabledMessage: app.DisabledMessage.String,
 
 			TokenValid:              tokenValid,
 			IsMember:                isMember,

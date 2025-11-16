@@ -43,6 +43,8 @@ func NewEmbedGenerator(
 
 	compatGateway := compat.NewDisgoGateway(br, compat.DisgoGatewayConfig{
 		GatewayCount: config.GatewayCount,
+		// We don't want to listen for events by custom bots
+		GroupIDs: []string{"default"},
 		EventTypes: []string{
 			"message.delete",
 			"channel.delete",

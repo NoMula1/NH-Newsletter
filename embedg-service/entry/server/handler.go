@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/handler"
@@ -35,8 +36,15 @@ func (g *EventHandler) OnEvent(event bot.Event) {
 	switch e := event.(type) {
 	case *events.MessageDelete:
 		g.onMessageDelete(e)
-	case *events.ComponentInteractionCreate:
-		g.onInteractionCreate(e)
+	case *events.InteractionCreate:
+		componentInteraction, ok := e.Interaction.(discord.ComponentInteraction)
+		if ok {
+			g.onComponentInteractionCreate(&events.ComponentInteractionCreate{
+				GenericEvent:         e.GenericEvent,
+				ComponentInteraction: componentInteraction,
+				Respond:              e.Respond,
+			})
+		}
 	}
 }
 
@@ -54,7 +62,7 @@ func (g *EventHandler) onMessageDelete(event *events.MessageDelete) {
 	}
 }
 
-func (g *EventHandler) onInteractionCreate(event *events.ComponentInteractionCreate) {
+func (g *EventHandler) onComponentInteractionCreate(event *events.ComponentInteractionCreate) {
 	isAction := strings.HasPrefix(event.Data.CustomID(), "action:")
 	if isAction {
 		gi := &handler.GenericInteraction{

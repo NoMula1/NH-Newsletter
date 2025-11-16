@@ -124,7 +124,7 @@ func registerRoutes(app *fiber.App, env *Env, config APIConfig) {
 
 	interactionHandler := interaction.New(interaction.InteractionHandlerConfig{
 		DiscordPublicKey: config.DiscordPublicKey,
-	}, env.EventDispatcher, env.Rest)
+	}, env.Client, env.EventDispatcher, env.Rest)
 	app.Post("/api/gateway", interactionHandler.HandleBotInteraction)
 
 	imagesHandler := images.New(images.ImagesHandlerConfig{

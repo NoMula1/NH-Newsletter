@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
@@ -19,13 +20,15 @@ type InteractionHandlerConfig struct {
 }
 
 type InteractionHandler struct {
+	client     *bot.Client
 	config     InteractionHandlerConfig
 	dispatcher store.EventDispatcher
 	rest       rest.Rest
 }
 
-func New(config InteractionHandlerConfig, dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
+func New(config InteractionHandlerConfig, client *bot.Client, dispatcher store.EventDispatcher, rest rest.Rest) *InteractionHandler {
 	return &InteractionHandler{
+		client:     client,
 		config:     config,
 		dispatcher: dispatcher,
 		rest:       rest,
@@ -37,8 +40,7 @@ func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
 		return handlers.Unauthorized("invalid_signature", "Invalid signature")
 	}
 
-	interaction := &events.InteractionCreate{}
-	err := c.BodyParser(interaction)
+	interaction, err := discord.UnmarshalInteraction(c.Body())
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
 
 	respCh := make(chan *discord.InteractionResponse)
 
-	interaction.Respond = func(responseType discord.InteractionResponseType, data discord.InteractionResponseData, opts ...rest.RequestOpt) error {
+	respondFunc := func(responseType discord.InteractionResponseType, data discord.InteractionResponseData, opts ...rest.RequestOpt) error {
 		respCh <- &discord.InteractionResponse{
 			Type: responseType,
 			Data: data,
@@ -59,7 +61,11 @@ func (h *InteractionHandler) HandleBotInteraction(c *fiber.Ctx) error {
 		return nil
 	}
 
-	h.dispatcher.DispatchEvent(interaction)
+	go h.dispatcher.DispatchEvent(&events.InteractionCreate{
+		GenericEvent: events.NewGenericEvent(h.client, 0, 0),
+		Interaction:  interaction,
+		Respond:      respondFunc,
+	})
 
 	select {
 	case resp := <-respCh:

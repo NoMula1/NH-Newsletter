@@ -12,7 +12,6 @@ import (
 	"log/slog"
 
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/handler"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
@@ -35,8 +34,7 @@ func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
 		return handlers.Unauthorized("invalid_signature", "Invalid signature")
 	}
 
-	interaction := &events.InteractionCreate{}
-	err = c.BodyParser(interaction)
+	interaction, err := discord.UnmarshalInteraction(c.Body())
 	if err != nil {
 		return err
 	}
@@ -57,7 +55,7 @@ func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
 	}
 
 	handle := false
-	switch i := interaction.Interaction.(type) {
+	switch i := interaction.(type) {
 	case discord.ComponentInteraction:
 		if strings.HasPrefix(i.Data.CustomID(), "action:") {
 			handle = true
@@ -70,7 +68,7 @@ func (h *CustomBotsHandler) HandleCustomBotInteraction(c *fiber.Ctx) error {
 		respCh := make(chan *discord.InteractionResponse)
 
 		ri := &handler.RestInteraction{
-			Inner:           interaction.Interaction,
+			Inner:           interaction,
 			Rest:            h.rest, // TODO?: Use custom bot session
 			InitialResponse: respCh,
 		}

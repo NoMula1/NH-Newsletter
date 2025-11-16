@@ -101,6 +101,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		AccessManager:         accessManager,
 		ActionParser:          actionParser,
 		ActionHandler:         actionHandler,
+		Client:                embedg.Client(),
 		Gateway:               embedg.Gateway(),
 		Caches:                embedg.Caches(),
 		Rest:                  embedg.Rest(),
