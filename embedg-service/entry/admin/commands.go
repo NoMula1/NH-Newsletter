@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/merlinfuchs/embed-generator/embedg-service/command"
 	"github.com/merlinfuchs/embed-generator/embedg-service/config"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/postgres"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg"
@@ -19,5 +20,5 @@ func SyncCommands(ctx context.Context, pg *postgres.Client, cfg *config.RootConf
 		return fmt.Errorf("failed to create embedg: %w", err)
 	}
 
-	return embedg.SyncCommands(ctx)
+	return command.SyncCommands(ctx, embedg.Rest(), embedg)
 }

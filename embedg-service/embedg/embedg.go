@@ -81,8 +81,6 @@ func NewEmbedGenerator(
 		config:       config,
 	}
 
-	client.AddEventListeners(embedg.interactionMux())
-
 	return embedg, nil
 }
 

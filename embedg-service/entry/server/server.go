@@ -10,6 +10,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
+	"github.com/merlinfuchs/embed-generator/embedg-service/command"
 	"github.com/merlinfuchs/embed-generator/embedg-service/config"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/postgres"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/s3"
@@ -51,8 +52,16 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		premiumManager,
 	)
 
-	handler := NewEventHandler(embedg.Rest(), pg, actionHandler)
+	handler := NewEventHandler(EventHandlerConfig{
+		DiscordLink: cfg.Links.Discord,
+	}, embedg, embedg.Rest(), embedg.Caches(), pg, actionHandler)
 	embedg.Client().AddEventListeners(handler)
+
+	commandHandler := command.NewCommandHandler(command.CommandHandlerConfig{
+		DiscordLink:  cfg.Links.Discord,
+		AppPublicURL: cfg.App.PublicURL,
+	}, embedg.Caches(), embedg.Rest(), embedg, pg, actionParser)
+	embedg.Client().AddEventListeners(commandHandler)
 
 	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest(), embedg.Gateway(), nil)
 	go customBotManager.Run(ctx)

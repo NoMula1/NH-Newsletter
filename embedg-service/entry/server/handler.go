@@ -7,26 +7,41 @@ import (
 	"time"
 
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/handler"
+	"github.com/merlinfuchs/embed-generator/embedg-service/embedg"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 )
 
+type EventHandlerConfig struct {
+	DiscordLink string
+}
+
 type EventHandler struct {
+	config         EventHandlerConfig
+	embedg         *embedg.EmbedGenerator
 	rest           rest.Rest
+	caches         cache.Caches
 	actionSetStore store.MessageActionSetStore
 	actionHandler  *handler.ActionHandler
 }
 
 func NewEventHandler(
+	config EventHandlerConfig,
+	embedg *embedg.EmbedGenerator,
 	rest rest.Rest,
+	caches cache.Caches,
 	actionSetStore store.MessageActionSetStore,
 	actionHandler *handler.ActionHandler,
 ) *EventHandler {
 	return &EventHandler{
+		config:         config,
+		embedg:         embedg,
 		rest:           rest,
+		caches:         caches,
 		actionSetStore: actionSetStore,
 		actionHandler:  actionHandler,
 	}
