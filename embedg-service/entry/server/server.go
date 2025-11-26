@@ -51,6 +51,11 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		actionParser,
 		premiumManager,
 	)
+	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest(), embedg.Gateway())
+	go customBotManager.Run(ctx)
+
+	webhookManager := webhook.NewWebhookManager(embedg.Rest(), embedg.Caches(), customBotManager)
+	embedg.Client().AddEventListeners(webhookManager)
 
 	handler := NewEventHandler(EventHandlerConfig{
 		DiscordLink: cfg.Links.Discord,
@@ -60,18 +65,12 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 	commandHandler := command.NewCommandHandler(command.CommandHandlerConfig{
 		DiscordLink:  cfg.Links.Discord,
 		AppPublicURL: cfg.App.PublicURL,
-	}, embedg.Caches(), embedg.Rest(), embedg, pg, actionParser)
+	}, embedg.Caches(), embedg.Rest(), embedg, pg, actionParser, webhookManager)
 	embedg.Client().AddEventListeners(commandHandler)
-
-	customBotManager := custom_bot.NewCustomBotManager(pg, embedg.Rest(), embedg.Gateway(), nil)
-	go customBotManager.Run(ctx)
 
 	sessionManager := session.New(session.SessionManagerConfig{
 		InsecureCookies: cfg.API.InsecureCookies,
 	}, pg)
-	webhookManager := webhook.NewWebhookManager(embedg.Rest(), embedg.Caches(), customBotManager)
-	embedg.Client().AddEventListeners(webhookManager)
-
 	scheduledMessageManager := scheduled_messages.NewScheduledMessageManager(
 		pg,
 		pg,

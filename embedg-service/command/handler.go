@@ -13,6 +13,7 @@ import (
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
+	"github.com/merlinfuchs/embed-generator/embedg-service/manager/webhook"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 )
 
@@ -28,6 +29,7 @@ type CommandHandler struct {
 	appContext         store.AppContext
 	sharedMessageStore store.SharedMessageStore
 	actionParser       *parser.ActionParser
+	webhookManager     *webhook.WebhookManager
 	router             handler.Router
 }
 
@@ -38,6 +40,7 @@ func NewCommandHandler(
 	appContext store.AppContext,
 	sharedMessageStore store.SharedMessageStore,
 	actionParser *parser.ActionParser,
+	webhookManager *webhook.WebhookManager,
 ) *CommandHandler {
 	h := &CommandHandler{
 		config:             config,
@@ -46,6 +49,7 @@ func NewCommandHandler(
 		appContext:         appContext,
 		sharedMessageStore: sharedMessageStore,
 		actionParser:       actionParser,
+		webhookManager:     webhookManager,
 	}
 	h.router = h.interactionRouter()
 	return h
@@ -109,7 +113,22 @@ func (g *CommandHandler) interactionRouter() handler.Router {
 	mx.Command("/Avatar Url", g.handleUserAvatarURLContextCommand)
 	mx.Command("/Format Mention", g.handleFormatMentionContextCommand)
 
-	mx.Command("/embed", g.handleEmbedCommand)
+	mx.Route("/embed", func(r handler.Router) {
+		r.Command("/", g.handleEmbedCommand)
+
+		r.ButtonComponent("/title", g.handleEmbedTitleButton)
+		r.ButtonComponent("/author", g.handleEmbedAuthorButton)
+		r.ButtonComponent("/description", g.handleEmbedDescriptionButton)
+		r.ButtonComponent("/color", g.handleEmbedColorButton)
+		r.ButtonComponent("/image", g.handleEmbedImageButton)
+		r.ButtonComponent("/thumbnail", g.handleEmbedThumbnailButton)
+		r.ButtonComponent("/footer", g.handleEmbedFooterButton)
+
+		r.ButtonComponent("/submit", g.handleEmbedSubmitButton)
+
+		r.Modal("/update", g.handleEmbedUpdateModal)
+		r.Modal("/send", g.handleEmbedSendModal)
+	})
 	return mx
 }
 

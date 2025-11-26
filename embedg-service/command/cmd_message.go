@@ -20,6 +20,7 @@ import (
 
 func (g *CommandHandler) handleMessageRestoreCommand(e *handler.CommandEvent) error {
 	message, err := g.getMessageFromCommand(e)
+	fmt.Println("message", message, err)
 	if err != nil {
 		return err
 	} else if message == nil {
@@ -118,7 +119,7 @@ func (g *CommandHandler) handleMessageDumpContextCommand(e *handler.CommandEvent
 	})
 }
 
-var messageURLRegex = regexp.MustCompile(`https?://(?:canary\\.|ptb\\.)?discord\\.com/channels/[0-9]+/([0-9]+)/([0-9]+)`)
+var messageURLRegex = regexp.MustCompile(`https?://(?:canary\.|ptb\.)?discord\.com/channels/[0-9]+/([0-9]+)/([0-9]+)`)
 
 func (g *CommandHandler) getMessageFromCommand(e *handler.CommandEvent) (*discord.Message, error) {
 	messageIDOrURL := e.SlashCommandInteractionData().String("message_id_or_url")
