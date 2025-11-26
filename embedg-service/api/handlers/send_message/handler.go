@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"log/slog"
+
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
@@ -19,7 +21,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/webhook"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
-	"log/slog"
 	"github.com/vincent-petithory/dataurl"
 )
 
@@ -101,9 +102,9 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 		params.TTS = data.TTS
 	}
 
-	attachments := make([]discord.AttachmentUpdate, len(req.Attachments))
+	// attachments := make([]discord.AttachmentUpdate, len(req.Attachments))
 
-	for i, attachment := range req.Attachments {
+	for _, attachment := range req.Attachments {
 		dataURL, err := dataurl.DecodeString(attachment.DataURL)
 		if err != nil {
 			return handlers.BadRequest("invalid_attachments", "Failed to parse attachment data URL")
@@ -115,9 +116,9 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 			Reader: bytes.NewReader(dataURL.Data),
 		})
 
-		attachments[i] = discord.AttachmentKeep{
+		/* attachments[i] = discord.AttachmentKeep{
 			ID: common.ID(i),
-		}
+		} */
 	}
 
 	params.Components, err = h.actionParser.ParseMessageComponents(data.Components, features.ComponentTypes)
@@ -133,7 +134,7 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 			Components:      &params.Components,
 			AllowedMentions: params.AllowedMentions,
 			Files:           params.Files,
-			Attachments:     &attachments,
+			//Attachments:     &attachments,
 		})
 	} else {
 		msg, err = h.webhookManager.SendMessageToChannel(c.Context(), req.ChannelID, params)

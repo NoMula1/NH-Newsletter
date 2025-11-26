@@ -442,7 +442,7 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 				Content: &content,
 			}, discord.InteractionResponseTypeUpdateMessage)
 		case actions.ActionTypeSavedMessageEdit:
-			if interaction.Type() != discord.InteractionTypeComponent || interaction.GuildID() == nil {
+			if interaction.GuildID() == nil {
 				continue
 			}
 
@@ -470,27 +470,34 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 				}
 			}
 
-			i.Respond(discord.MessageCreate{
-				Content:    data.Content,
-				Embeds:     data.Embeds,
-				Components: components,
-				Flags:      data.Flags,
-			})
+			newMsg := i.Respond(discord.MessageUpdate{
+				Content:    &data.Content,
+				Embeds:     &data.Embeds,
+				Components: &components,
+				Flags:      &data.Flags,
+			}, discord.InteractionResponseTypeUpdateMessage)
 
-			if !legacyPermissions {
-				if compInteraction, ok := interaction.(discord.ComponentInteraction); ok {
-					ephemeral := compInteraction.Message.Flags&discord.MessageFlagEphemeral != 0
-					err = m.parser.CreateActionsForMessage(context.TODO(), data.Actions, *derivedPerms, compInteraction.Message.ID, ephemeral)
-					if err != nil {
-						slog.Error("failed to create actions for message", slog.Any("error", err))
-						return err
-					}
+			if compInteraction, ok := interaction.(discord.ComponentInteraction); ok {
+				newMsg = &compInteraction.Message
+			}
+
+			if !legacyPermissions && newMsg != nil {
+				ephemeral := newMsg.Flags&discord.MessageFlagEphemeral != 0
+				err = m.parser.CreateActionsForMessage(context.TODO(), data.Actions, *derivedPerms, newMsg.ID, ephemeral)
+				if err != nil {
+					slog.Error("failed to create actions for message", slog.Any("error", err))
+					return err
 				}
 			}
 		case actions.ActionTypePermissionCheck:
 			perms, _ := strconv.ParseInt(action.Permissions, 10, 64)
 
-			if member := interaction.Member(); member != nil && member.Permissions&discord.Permissions(perms) != discord.Permissions(perms) {
+			member := interaction.Member()
+			if member == nil {
+				return fmt.Errorf("member not found")
+			}
+
+			if member.Permissions&discord.Permissions(perms) != discord.Permissions(perms) {
 				responseText := "You don't have the required permissions to use this component or command."
 				if action.DisableDefaultResponse {
 					responseText = action.Text
@@ -509,19 +516,17 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 			}
 
 			if len(action.RoleIDs) != 0 {
-				if member := interaction.Member(); member != nil {
-					for _, roleID := range action.RoleIDs {
-						roleIDSnowflake, err := snowflake.Parse(roleID)
-						if err != nil {
-							continue
-						}
-						if !slices.Contains(member.RoleIDs, roleIDSnowflake) {
-							i.Respond(discord.MessageCreate{
-								Content: responseText,
-								Flags:   discord.MessageFlagEphemeral,
-							})
-							return nil
-						}
+				for _, roleID := range action.RoleIDs {
+					roleIDSnowflake, err := snowflake.Parse(roleID)
+					if err != nil {
+						continue
+					}
+					if !slices.Contains(member.RoleIDs, roleIDSnowflake) {
+						i.Respond(discord.MessageCreate{
+							Content: responseText,
+							Flags:   discord.MessageFlagEphemeral,
+						})
+						return nil
 					}
 				}
 			}

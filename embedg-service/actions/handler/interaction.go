@@ -42,13 +42,22 @@ func (i *GenericInteraction) Respond(data discord.InteractionResponseData, t ...
 
 	if !i.Responded {
 		err = i.RespondFunc(responseType, data)
-	} else {
+	} else if responseType == discord.InteractionResponseTypeCreateMessage {
 		msgData, ok := data.(discord.MessageCreate)
 		if !ok {
 			err = fmt.Errorf("can't create followup message, data is not a MessageCreate")
 		} else {
 			msg, err = i.Rest.CreateFollowupMessage(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
 		}
+	} else if responseType == discord.InteractionResponseTypeUpdateMessage {
+		msgData, ok := data.(discord.MessageUpdate)
+		if !ok {
+			err = fmt.Errorf("can't update followup message, data is not a MessageUpdate")
+		} else {
+			msg, err = i.Rest.UpdateInteractionResponse(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
+		}
+	} else {
+		err = fmt.Errorf("invalid response type after initial response, %d", responseType)
 	}
 
 	if err != nil {
@@ -93,13 +102,22 @@ func (i *GatewayInteraction) Respond(data discord.InteractionResponseData, t ...
 				Data: data,
 			},
 		)
-	} else {
+	} else if responseType == discord.InteractionResponseTypeCreateMessage {
 		msgData, ok := data.(discord.MessageCreate)
 		if !ok {
 			err = fmt.Errorf("can't create followup message, data is not a MessageCreate")
 		} else {
 			msg, err = i.Rest.CreateFollowupMessage(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
 		}
+	} else if responseType == discord.InteractionResponseTypeUpdateMessage {
+		msgData, ok := data.(discord.MessageUpdate)
+		if !ok {
+			err = fmt.Errorf("can't update followup message, data is not a MessageUpdate")
+		} else {
+			msg, err = i.Rest.UpdateInteractionResponse(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
+		}
+	} else {
+		err = fmt.Errorf("invalid response type after initial response, %d", responseType)
 	}
 
 	if err != nil {
@@ -141,13 +159,22 @@ func (i *RestInteraction) Respond(data discord.InteractionResponseData, t ...dis
 			Type: responseType,
 			Data: data,
 		}
-	} else {
+	} else if responseType == discord.InteractionResponseTypeCreateMessage {
 		msgData, ok := data.(discord.MessageCreate)
 		if !ok {
 			err = fmt.Errorf("can't create followup message, data is not a MessageCreate")
 		} else {
 			msg, err = i.Rest.CreateFollowupMessage(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
 		}
+	} else if responseType == discord.InteractionResponseTypeUpdateMessage {
+		msgData, ok := data.(discord.MessageUpdate)
+		if !ok {
+			err = fmt.Errorf("can't update followup message, data is not a MessageUpdate")
+		} else {
+			msg, err = i.Rest.UpdateInteractionResponse(i.Inner.ApplicationID(), i.Inner.Token(), msgData)
+		}
+	} else {
+		err = fmt.Errorf("invalid response type after initial response, %d", responseType)
 	}
 
 	if err != nil {
