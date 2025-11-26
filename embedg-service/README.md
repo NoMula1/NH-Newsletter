@@ -1,15 +1,3 @@
 # Embed Generator Service
 
-## TODO
-
-- [x] Implement /embed command
-- [ ] Test functionality
-  - [ ] Sending & editing messages
-  - [ ] Restoring messages
-  - [ ] Message Components
-  - [ ] All action set types
-  - [ ] Saving & restoring messages
-  - [ ] Custom Bots
-  - [ ] Custom Commands
-  - [ ] Scheduled Messages
-  - [ ] AI Assistant
+Re-implementation of the Embed Generator backend as a stateless service. It depends on [stateway](https://github.com/merlinfuchs/stateway) for connecting to the Discord gateway and caching.

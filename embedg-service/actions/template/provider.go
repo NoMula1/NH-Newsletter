@@ -36,7 +36,16 @@ func NewInteractionProvider(caches cache.Caches, interaction discord.Interaction
 func (p *InteractionProvider) ProvideFuncs(funcs map[string]interface{}) {}
 
 func (p *InteractionProvider) ProvideData(data map[string]interface{}) {
-	data["Interaction"] = NewInteractionData(p.caches, p.interaction)
+	interactionData := NewInteractionData(p.caches, p.interaction)
+	data["Interaction"] = interactionData
+	data["User"] = interactionData.User()
+	data["Member"] = interactionData.Member()
+
+	commandData := interactionData.Command()
+	if commandData != nil {
+		data["Command"] = commandData
+		data["Args"] = commandData.Args()
+	}
 
 	guildID := p.interaction.GuildID()
 	if guildID == nil {
