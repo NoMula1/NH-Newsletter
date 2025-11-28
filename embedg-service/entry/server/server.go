@@ -10,7 +10,6 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
-	"github.com/merlinfuchs/embed-generator/embedg-service/command"
 	"github.com/merlinfuchs/embed-generator/embedg-service/config"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/postgres"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/s3"
@@ -41,7 +40,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 	embedg.Client().AddEventListeners(premiumManager)
 	go premiumManager.Run(ctx)
 
-	accessManager := access.New(embedg.Caches(), embedg.Rest(), embedg)
+	accessManager := access.New(embedg.Cache(), embedg.Caches(), embedg.Rest(), embedg)
 	actionParser := parser.New(accessManager, pg, pg, embedg.Caches())
 	actionHandler := handler.New(
 		pg,
@@ -57,7 +56,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 	webhookManager := webhook.NewWebhookManager(embedg.Rest(), embedg.Caches(), customBotManager)
 	embedg.Client().AddEventListeners(webhookManager)
 
-	handler := NewEventHandler(EventHandlerConfig{
+	/* handler := NewEventHandler(EventHandlerConfig{
 		DiscordLink: cfg.Links.Discord,
 	}, embedg, embedg.Rest(), embedg.Caches(), pg, actionHandler)
 	embedg.Client().AddEventListeners(handler)
@@ -66,7 +65,7 @@ func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.
 		DiscordLink:  cfg.Links.Discord,
 		AppPublicURL: cfg.App.PublicURL,
 	}, embedg.Caches(), embedg.Rest(), embedg, pg, actionParser, webhookManager)
-	embedg.Client().AddEventListeners(commandHandler)
+	embedg.Client().AddEventListeners(commandHandler) */
 
 	sessionManager := session.New(session.SessionManagerConfig{
 		InsecureCookies: cfg.API.InsecureCookies,

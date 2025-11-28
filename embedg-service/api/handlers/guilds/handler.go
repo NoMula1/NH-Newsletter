@@ -36,14 +36,19 @@ func New(customBotStore store.CustomBotStore, caches cache.Caches, am *access.Ac
 func (h *GuildsHanlder) HandleListGuilds(c *fiber.Ctx) error {
 	session := c.Locals("session").(*session.Session)
 
+	known, err := h.am.CheckGuildsKnown(session.GuildIDs)
+	if err != nil {
+		slog.Error("Failed to check guilds known", slog.Any("error", err))
+		return err
+	}
+
 	res := make([]wire.GuildWire, 0, len(session.GuildIDs))
-	for _, guildID := range session.GuildIDs {
-		guild, ok := h.caches.Guild(guildID)
-		if !ok {
+	for i, guildID := range session.GuildIDs {
+		if !known[i] {
 			continue
 		}
 
-		access, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
+		access, guild, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
 		if err != nil {
 			slog.Error("Failed to check guild access", slog.Any("error", err))
 			return err
@@ -53,8 +58,8 @@ func (h *GuildsHanlder) HandleListGuilds(c *fiber.Ctx) error {
 			ID:                       guild.ID,
 			Name:                     guild.Name,
 			Icon:                     null.StringFromPtr(guild.Icon),
-			HasChannelWithUserAccess: access.HasChannelWithUserAccess,
-			HasChannelWithBotAccess:  access.HasChannelWithBotAccess,
+			HasChannelWithUserAccess: access.HasChannelWithUserAccess(),
+			HasChannelWithBotAccess:  access.HasChannelWithBotAccess(),
 		})
 	}
 
@@ -75,12 +80,17 @@ func (h *GuildsHanlder) HandleGetGuild(c *fiber.Ctx) error {
 		return err
 	}
 
-	guild, ok := h.caches.Guild(guildID)
-	if !ok {
+	known, err := h.am.CheckGuildsKnown([]common.ID{guildID})
+	if err != nil {
+		slog.Error("Failed to check guilds known", slog.Any("error", err))
+		return err
+	}
+
+	if !known[0] {
 		return handlers.NotFound("unknown_guild", "The guild does not exist.")
 	}
 
-	access, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
+	access, guild, err := h.am.GetGuildAccessForUser(session.UserID, guildID)
 	if err != nil {
 		slog.Error("Failed to check guild access", slog.Any("error", err))
 		return err
@@ -90,8 +100,8 @@ func (h *GuildsHanlder) HandleGetGuild(c *fiber.Ctx) error {
 		ID:                       guild.ID,
 		Name:                     guild.Name,
 		Icon:                     null.StringFromPtr(guild.Icon),
-		HasChannelWithUserAccess: access.HasChannelWithUserAccess,
-		HasChannelWithBotAccess:  access.HasChannelWithBotAccess,
+		HasChannelWithUserAccess: access.HasChannelWithUserAccess(),
+		HasChannelWithBotAccess:  access.HasChannelWithBotAccess(),
 	}
 
 	return c.JSON(wire.GetGuildResponseWire{

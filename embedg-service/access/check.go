@@ -10,16 +10,16 @@ import (
 func (m *AccessManager) CheckGuildAccessForRequest(c *fiber.Ctx, guildID common.ID) error {
 	session := c.Locals("session").(*session.Session)
 
-	access, err := m.GetGuildAccessForUser(session.UserID, guildID)
+	access, _, err := m.GetGuildAccessForUser(session.UserID, guildID)
 	if err != nil {
 		return err
 	}
 
-	if !access.HasChannelWithBotAccess {
+	if !access.HasChannelWithBotAccess() {
 		return handlers.Forbidden("bot_missing_access", "The bot doesn't have access to this guild")
 	}
 
-	if !access.HasChannelWithUserAccess {
+	if !access.HasChannelWithUserAccess() {
 		return handlers.Forbidden("missing_access", "You don't have access to this guild")
 	}
 

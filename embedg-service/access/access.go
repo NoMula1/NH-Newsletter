@@ -1,24 +1,30 @@
 package access
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/disgoorg/disgo/cache"
+	discache "github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
+	"github.com/merlinfuchs/stateway/stateway-lib/cache"
 )
 
+const RequiredPermissions = discord.PermissionManageWebhooks
+
 type AccessManager struct {
-	caches     cache.Caches
+	cache      cache.Cache
+	caches     discache.Caches
 	rest       rest.Rest
 	appContext store.AppContext
 }
 
-func New(caches cache.Caches, rest rest.Rest, appContext store.AppContext) *AccessManager {
+func New(cache cache.Cache, caches discache.Caches, rest rest.Rest, appContext store.AppContext) *AccessManager {
 	return &AccessManager{
+		cache:      cache,
 		caches:     caches,
 		rest:       rest,
 		appContext: appContext,
@@ -26,8 +32,16 @@ func New(caches cache.Caches, rest rest.Rest, appContext store.AppContext) *Acce
 }
 
 type GuildAccess struct {
-	HasChannelWithUserAccess bool
-	HasChannelWithBotAccess  bool
+	CombinedUserPermissions discord.Permissions
+	CombinedBotPermissions  discord.Permissions
+}
+
+func (g *GuildAccess) HasChannelWithUserAccess() bool {
+	return g.CombinedUserPermissions&(RequiredPermissions|discord.PermissionAdministrator) != 0
+}
+
+func (g *GuildAccess) HasChannelWithBotAccess() bool {
+	return g.CombinedBotPermissions&(RequiredPermissions|discord.PermissionAdministrator) != 0
 }
 
 type ChannelAccess struct {
@@ -36,61 +50,67 @@ type ChannelAccess struct {
 }
 
 func (c *ChannelAccess) UserAccess() bool {
-	return c.UserPermissions&(discord.PermissionManageWebhooks|discord.PermissionAdministrator) != 0
+	return c.UserPermissions&(RequiredPermissions|discord.PermissionAdministrator) != 0
 }
 
 func (c *ChannelAccess) BotAccess() bool {
-	return c.BotPermissions&(discord.PermissionManageWebhooks|discord.PermissionAdministrator) != 0
+	return c.BotPermissions&(RequiredPermissions|discord.PermissionAdministrator) != 0
 }
 
-func (m *AccessManager) GetGuildAccessForUser(userID common.ID, guildID common.ID) (GuildAccess, error) {
+func (m *AccessManager) CheckGuildsKnown(guildID []common.ID) ([]bool, error) {
+	known, err := m.cache.CheckGuildsExist(context.Background(), guildID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to check guilds known: %w", err)
+	}
+
+	return known, nil
+}
+
+func (m *AccessManager) GetGuildAccessForUser(userID common.ID, guildID common.ID) (GuildAccess, *discord.Guild, error) {
 	res := GuildAccess{}
 
-	// TODO?: Use Stateway MassComputeChannelPermissions
-
-	guild, ok := m.caches.Guild(guildID)
-	if !ok {
-		return res, nil
+	botMember, err := m.GetGuildMember(guildID, m.appContext.ApplicationID())
+	if err != nil {
+		return res, nil, fmt.Errorf("Failed to get bot member: %w", err)
 	}
 
-	if guild.OwnerID == userID {
-		res.HasChannelWithUserAccess = true
+	guild, err := m.cache.GetGuildWithPermissions(
+		context.Background(),
+		guildID,
+		m.appContext.ApplicationID(),
+		botMember.RoleIDs,
+		RequiredPermissions,
+		nil...,
+	)
+	if err != nil {
+		return res, nil, fmt.Errorf("Failed to get guild with permissions: %w", err)
 	}
 
-	channels := m.caches.ChannelsForGuild(guildID)
-
-	for channel := range channels {
-		if !res.HasChannelWithUserAccess {
-			access := ChannelAccess{}
-			err := m.SetChannelAccessUserPermissions(&access, userID, channel.ID())
-			if err != nil {
-				return res, err
-			}
-
-			if access.UserAccess() {
-				res.HasChannelWithUserAccess = true
-			}
-		}
-
-		if !res.HasChannelWithBotAccess {
-			access := ChannelAccess{}
-			err := m.SetChannelAccessBotPermissions(&access, channel.ID())
-			if err != nil {
-				return res, err
-			}
-
-			if access.BotAccess() {
-				res.HasChannelWithBotAccess = true
-			}
-		}
-
-		// We can stop iterating if we already know that the user has access to both
-		if res.HasChannelWithBotAccess && res.HasChannelWithUserAccess {
-			break
-		}
+	res.CombinedBotPermissions = guild.MaxChannelPermissions
+	if !res.HasChannelWithBotAccess() {
+		// No point in checking user access if the bot doesn't have access to any channels
+		return res, &guild.Guild.Data, nil
 	}
 
-	return res, nil
+	member, err := m.GetGuildMember(guildID, userID)
+	if err != nil {
+		return res, nil, fmt.Errorf("Failed to get guild member: %w", err)
+	}
+
+	guild, err = m.cache.GetGuildWithPermissions(
+		context.Background(),
+		guildID,
+		userID,
+		member.RoleIDs,
+		RequiredPermissions,
+		nil...,
+	)
+	if err != nil {
+		return res, nil, fmt.Errorf("Failed to get guild with permissions: %w", err)
+	}
+
+	res.CombinedUserPermissions = guild.MaxChannelPermissions
+	return res, &guild.Guild.Data, nil
 }
 
 func (m *AccessManager) GetChannelAccessForUser(userID common.ID, channelID common.ID) (ChannelAccess, error) {
@@ -138,13 +158,14 @@ func (m *AccessManager) SetChannelAccessBotPermissions(res *ChannelAccess, chann
 
 func (m *AccessManager) ComputeUserPermissionsForChannel(userID common.ID, channelID common.ID) (discord.Permissions, error) {
 	channel, ok := m.caches.Channel(channelID)
-	if !ok {
+	if !ok || channel.GuildID() == 0 {
 		return 0, nil
 	}
 
 	member, err := m.GetGuildMember(channel.GuildID(), userID)
 	if err != nil {
-		return 0, err
+		// TODO: Handle this error
+		return 0, nil
 	}
 
 	return m.caches.MemberPermissionsInChannel(channel, *member), nil
