@@ -9,7 +9,7 @@ import (
 
 type PlanStore interface {
 	GetPlanByID(id string) *model.Plan
-	GetPlanBySKUID(skuID common.ID) *model.Plan
+	GetPlanBySKUID(skuID string) *model.Plan
 	GetPlanFeaturesForGuild(ctx context.Context, guildID common.ID) (model.PlanFeatures, error)
 	GetPlanFeaturesForUser(ctx context.Context, userID common.ID) (model.PlanFeatures, error)
 }

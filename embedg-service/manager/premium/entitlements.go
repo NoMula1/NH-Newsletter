@@ -40,7 +40,7 @@ func (m *PremiumManager) handleEntitlement(entitlement discord.Entitlement) {
 		GuildID:   guildID,
 		UpdatedAt: time.Now().UTC(),
 		Deleted:   entitlement.Deleted,
-		SkuID:     entitlement.SkuID,
+		SkuID:     entitlement.SkuID.String(),
 		StartsAt:  null.TimeFromPtr(entitlement.StartsAt),
 		EndsAt:    null.TimeFromPtr(entitlement.EndsAt),
 		Consumed:  consumed,

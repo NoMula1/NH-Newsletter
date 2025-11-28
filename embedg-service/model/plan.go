@@ -1,10 +1,8 @@
 package model
 
-import "github.com/merlinfuchs/embed-generator/embedg-service/common"
-
 type Plan struct {
 	ID         string       `toml:"id"`
-	SKUID      common.ID    `toml:"sku_id"`
+	SKUID      string       `toml:"sku_id"`
 	Default    bool         `toml:"default"`
 	Features   PlanFeatures `toml:"features"`
 	Consumable bool         `toml:"consumable"`

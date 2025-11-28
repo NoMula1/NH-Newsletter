@@ -18,7 +18,7 @@ func (m *PremiumManager) GetPlanByID(id string) *model.Plan {
 	return nil
 }
 
-func (m *PremiumManager) GetPlanBySKUID(skuID common.ID) *model.Plan {
+func (m *PremiumManager) GetPlanBySKUID(skuID string) *model.Plan {
 	for _, plan := range m.config.Plans {
 		if plan.SKUID == skuID {
 			return &plan
