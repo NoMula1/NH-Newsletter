@@ -179,6 +179,17 @@ func (m *ScheduledMessageManager) SendScheduledMessage(ctx context.Context, sche
 
 	msg, err := m.webhookManager.SendMessageToChannel(ctx, scheduledMessage.ChannelID, params)
 	if err != nil {
+		if errors.Is(err, webhook.ErrChannelNotFound) {
+			err := m.scheduledMessageStore.UpdateScheduledMessageEnabled(ctx, scheduledMessage.GuildID, scheduledMessage.ID, false, time.Now().UTC())
+			if err != nil {
+				slog.Error(
+					"Failed to disable scheduled message after channel not found",
+					slog.Any("error", err),
+					slog.String("scheduled_message_id", scheduledMessage.ID),
+				)
+			}
+			return nil
+		}
 		return fmt.Errorf("Failed to send message: %w", err)
 	}
 

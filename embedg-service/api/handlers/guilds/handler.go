@@ -54,6 +54,10 @@ func (h *GuildsHanlder) HandleListGuilds(c *fiber.Ctx) error {
 			return err
 		}
 
+		if guild == nil {
+			continue
+		}
+
 		res = append(res, wire.GuildWire{
 			ID:                       guild.ID,
 			Name:                     guild.Name,
@@ -94,6 +98,10 @@ func (h *GuildsHanlder) HandleGetGuild(c *fiber.Ctx) error {
 	if err != nil {
 		slog.Error("Failed to check guild access", slog.Any("error", err))
 		return err
+	}
+
+	if guild == nil {
+		return handlers.NotFound("unknown_guild", "The guild does not exist.")
 	}
 
 	res := wire.GuildWire{

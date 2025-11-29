@@ -71,6 +71,15 @@ func (m *AccessManager) GetGuildAccessForUser(userID common.ID, guildID common.I
 
 	botMember, err := m.GetGuildMember(guildID, m.appContext.ApplicationID())
 	if err != nil {
+		if common.IsDiscordRestErrorCode(
+			err,
+			discordgo.ErrCodeMissingAccess,
+			discordgo.ErrCodeUnknownGuild,
+			discordgo.ErrCodeUnknownMember,
+		) {
+			// The bot is not in the server, so we can't compute the permissions
+			return res, nil, nil
+		}
 		return res, nil, fmt.Errorf("Failed to get bot member: %w", err)
 	}
 
@@ -94,6 +103,15 @@ func (m *AccessManager) GetGuildAccessForUser(userID common.ID, guildID common.I
 
 	member, err := m.GetGuildMember(guildID, userID)
 	if err != nil {
+		if common.IsDiscordRestErrorCode(
+			err,
+			discordgo.ErrCodeMissingAccess,
+			discordgo.ErrCodeUnknownGuild,
+			discordgo.ErrCodeUnknownMember,
+		) {
+			// The user is not in the server, so we can't compute the permissions
+			return res, nil, nil
+		}
 		return res, nil, fmt.Errorf("Failed to get guild member: %w", err)
 	}
 

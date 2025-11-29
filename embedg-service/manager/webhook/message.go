@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	_ "embed"
@@ -14,13 +15,15 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 )
 
+var ErrChannelNotFound = errors.New("channel not found in cache")
+
 //go:embed logo-512.png
 var logoFile []byte
 
 func (m *WebhookManager) SendMessageToChannel(ctx context.Context, channelID common.ID, params discord.WebhookMessageCreate) (*discord.Message, error) {
 	channel, ok := m.caches.Channel(channelID)
 	if !ok {
-		return nil, fmt.Errorf("channel not found in cache")
+		return nil, ErrChannelNotFound
 	}
 
 	useCustomBot := false

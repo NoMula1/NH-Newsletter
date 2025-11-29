@@ -25,7 +25,7 @@ require (
 	github.com/merlinfuchs/discordgo v0.0.0-20251108151703-8f057be56eb6
 	github.com/merlinfuchs/embed-generator/embedg-app v0.0.0
 	github.com/merlinfuchs/embed-generator/embedg-site v0.0.0
-	github.com/merlinfuchs/stateway/stateway-lib v0.0.0-20251128195651-0665f7dac054
+	github.com/merlinfuchs/stateway/stateway-lib v0.0.0-20251129112323-227c71735bd5
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/ravener/discord-oauth2 v0.0.0-20230514095040-ae65713199b3
