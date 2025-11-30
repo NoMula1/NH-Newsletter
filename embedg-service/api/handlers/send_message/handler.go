@@ -11,6 +11,7 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
+	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/access"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
@@ -102,8 +103,6 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 		params.TTS = data.TTS
 	}
 
-	// attachments := make([]discord.AttachmentUpdate, len(req.Attachments))
-
 	for _, attachment := range req.Attachments {
 		dataURL, err := dataurl.DecodeString(attachment.DataURL)
 		if err != nil {
@@ -115,10 +114,6 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 			// ContentType: dataURL.ContentType(),
 			Reader: bytes.NewReader(dataURL.Data),
 		})
-
-		/* attachments[i] = discord.AttachmentKeep{
-			ID: common.ID(i),
-		} */
 	}
 
 	params.Components, err = h.actionParser.ParseMessageComponents(data.Components, features.ComponentTypes)
@@ -134,13 +129,15 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 			Components:      &params.Components,
 			AllowedMentions: params.AllowedMentions,
 			Files:           params.Files,
-			//Attachments:     &attachments,
 		})
 	} else {
 		msg, err = h.webhookManager.SendMessageToChannel(c.Context(), req.ChannelID, params)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to send message: %w", err)
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeUnknownMessage) {
+			return handlers.NotFound("unknown_message", "The message to edit does not exist.")
+		}
+		return fmt.Errorf("Failed to send or edit message: %w", err)
 	}
 
 	permContext, err := h.actionParser.DerivePermissionsForActions(session.UserID, req.GuildID, req.ChannelID)
@@ -245,6 +242,9 @@ func (h *SendMessageHandler) HandleSendMessageToWebhook(c *fiber.Ctx, req wire.M
 		)
 	}
 	if err != nil {
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeUnknownWebhook) {
+			return handlers.NotFound("unknown_webhook", "The webhook does not exist.")
+		}
 		return err
 	}
 

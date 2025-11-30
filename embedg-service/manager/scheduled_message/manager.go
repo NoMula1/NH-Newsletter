@@ -12,9 +12,11 @@ import (
 	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/template"
+	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/webhook"
 	"github.com/merlinfuchs/embed-generator/embedg-service/model"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
@@ -179,7 +181,17 @@ func (m *ScheduledMessageManager) SendScheduledMessage(ctx context.Context, sche
 
 	msg, err := m.webhookManager.SendMessageToChannel(ctx, scheduledMessage.ChannelID, params)
 	if err != nil {
-		if errors.Is(err, webhook.ErrChannelNotFound) {
+		if errors.Is(err, webhook.ErrChannelNotFound) ||
+			common.IsDiscordRestErrorCode(
+				err,
+				discordgo.ErrCodeUnknownChannel,
+				discordgo.ErrCodeUnknownGuild,
+				discordgo.ErrCodeUnknownMessage,
+				discordgo.ErrCodeMissingAccess,
+				discordgo.ErrCodeInvalidFormBody,
+				discordgo.ErrCodeMissingPermissions,
+				discordgo.ErrCodeMissingAccess,
+			) {
 			err := m.scheduledMessageStore.UpdateScheduledMessageEnabled(ctx, scheduledMessage.GuildID, scheduledMessage.ID, false, time.Now().UTC())
 			if err != nil {
 				slog.Error(
@@ -190,7 +202,7 @@ func (m *ScheduledMessageManager) SendScheduledMessage(ctx context.Context, sche
 			}
 			return nil
 		}
-		return fmt.Errorf("Failed to send message: %w", err)
+		return fmt.Errorf("failed to send message: %w", err)
 	}
 
 	permContext, err := m.actionParser.DerivePermissionsForActions(scheduledMessage.CreatorID, scheduledMessage.GuildID, scheduledMessage.ChannelID)

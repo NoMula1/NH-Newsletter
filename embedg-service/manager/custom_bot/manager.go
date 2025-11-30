@@ -3,7 +3,6 @@ package custom_bot
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"time"
 
 	disrest "github.com/disgoorg/disgo/rest"
@@ -39,11 +38,11 @@ func (m *CustomBotManager) Run(ctx context.Context) {
 	for {
 		select {
 		case <-syncTicker.C:
-			err := m.SyncCustomBots(ctx)
+			/* err := m.SyncCustomBots(ctx)
 			if err != nil {
 				slog.Error("Failed to sync custom bots", slog.Any("error", err))
 				continue
-			}
+			} */
 		case <-ctx.Done():
 			return
 		}

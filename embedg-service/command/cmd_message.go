@@ -20,7 +20,6 @@ import (
 
 func (g *CommandHandler) handleMessageRestoreCommand(e *handler.CommandEvent) error {
 	message, err := g.getMessageFromCommand(e)
-	fmt.Println("message", message, err)
 	if err != nil {
 		return err
 	} else if message == nil {

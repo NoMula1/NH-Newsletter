@@ -14,9 +14,11 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/snowflake/v2"
+	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/parser"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions/template"
+	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/merlinfuchs/embed-generator/embedg-service/store"
 )
 
@@ -224,7 +226,6 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 				}
 			}
 			if err != nil {
-				slog.Error("Failed to toggle role", slog.Any("error", err))
 				i.Respond(discord.MessageCreate{
 					Content: roleErrorMessage,
 					Flags:   discord.MessageFlagEphemeral,
@@ -262,7 +263,6 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 						})
 					}
 				} else {
-					slog.Error("Failed to add role", slog.Any("error", err))
 					i.Respond(discord.MessageCreate{
 						Content: roleErrorMessage,
 						Flags:   discord.MessageFlagEphemeral,
@@ -301,7 +301,6 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 						})
 					}
 				} else {
-					slog.Error("Failed to remove role", slog.Any("error", err))
 					i.Respond(discord.MessageCreate{
 						Content: roleErrorMessage,
 						Flags:   discord.MessageFlagEphemeral,
@@ -386,7 +385,13 @@ func (m *ActionHandler) HandleActionInteraction(restClient rest.Rest, i Interact
 				Content: action.Text,
 			}, rest.WithCtx(context.TODO()))
 			if err != nil {
-				slog.Error("Failed to send DM", slog.Any("error", err))
+				if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeCannotSendMessagesToThisUser) {
+					i.Respond(discord.MessageCreate{
+						Content: "You have blocked the bot from sending you DMs. Please allow DMs from server members in your privacy settings.",
+						Flags:   discord.MessageFlagEphemeral,
+					})
+					return nil
+				}
 				return fmt.Errorf("failed to send DM: %w", err)
 			}
 		case actions.ActionTypeSavedMessageDM:

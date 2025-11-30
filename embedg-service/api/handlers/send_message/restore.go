@@ -10,8 +10,11 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/gofiber/fiber/v2"
+	"github.com/merlinfuchs/discordgo"
 	"github.com/merlinfuchs/embed-generator/embedg-service/actions"
+	"github.com/merlinfuchs/embed-generator/embedg-service/api/handlers"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/wire"
+	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 	"github.com/vincent-petithory/dataurl"
 	"gopkg.in/guregu/null.v4"
 )
@@ -24,6 +27,12 @@ func (h *SendMessageHandler) HandleRestoreMessageFromChannel(c *fiber.Ctx, req w
 	// We don't use a webhook here because we don't need to, but this means that some restored messages can't actually be edited
 	msg, err := h.rest.GetMessage(req.ChannelID, req.MessageID, rest.WithCtx(c.Context()))
 	if err != nil {
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeUnknownMessage) {
+			return handlers.NotFound("unknown_message", "The message to restore does not exist.")
+		}
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeMissingAccess) {
+			return handlers.Forbidden("missing_access", "The bot doesn't have access to read messages from this channel.")
+		}
 		return fmt.Errorf("Failed to get message: %w", err)
 	}
 
@@ -72,6 +81,12 @@ func (h *SendMessageHandler) HandleRestoreMessageFromWebhook(c *fiber.Ctx, req w
 
 	msg, err := h.rest.GetWebhookMessage(req.WebhookID, req.WebhookToken, req.MessageID, reqOpts...)
 	if err != nil {
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeUnknownWebhook) {
+			return handlers.NotFound("unknown_webhook", "The webhook does not exist.")
+		}
+		if common.IsDiscordRestErrorCode(err, discordgo.ErrCodeUnknownMessage) {
+			return handlers.NotFound("unknown_message", "The message to restore does not exist.")
+		}
 		return err
 	}
 
