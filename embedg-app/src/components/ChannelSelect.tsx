@@ -1,11 +1,13 @@
 import {
+  ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGuildChannelsQuery } from "../api/queries";
 import ClickOutsideHandler from "./ClickOutsideHandler";
+import { useToasts } from "../util/toasts";
 
 interface Props {
   guildId: string | null;
@@ -27,6 +29,7 @@ function canSelectChannelType(type: number) {
 
 export function ChannelSelect({ guildId, channelId, onChange }: Props) {
   const { data } = useGuildChannelsQuery(guildId);
+  const toast = useToasts((state) => state.create);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,6 +50,16 @@ export function ChannelSelect({ guildId, channelId, onChange }: Props) {
     onChange(channelId);
     setOpen(false);
   }
+
+  useEffect(() => {
+    if (data?.success === false) {
+      toast({
+        title: "Failed to load channels",
+        message: data.error.message,
+        type: "error",
+      });
+    }
+  }, [data]);
 
   const channels = useMemo(() => {
     const rawChannels = data?.success ? data.data : [];
@@ -159,7 +172,12 @@ export function ChannelSelect({ guildId, channelId, onChange }: Props) {
             )}
           />
           <div className={open ? "md:hidden" : ""}>
-            {channel ? (
+            {!data ? (
+              <div className="flex items-center space-x-2">
+                <ArrowPathIcon className="h-5 w-5 text-gray-300 animate-spin" />
+                <div className="text-gray-400">Loading...</div>
+              </div>
+            ) : channel ? (
               <div className="flex items-center space-x-2 cursor-pointer w-full">
                 {channel.type === 15 ? (
                   <ChatBubbleLeftRightIcon className="h-5 w-5 text-gray-300" />
