@@ -41,6 +41,7 @@ var CLI = cli.App{
 			},
 		},
 		&adminCMD,
+		&databaseCMD,
 	},
 }
 
