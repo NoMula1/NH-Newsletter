@@ -191,6 +191,7 @@ func (m *ScheduledMessageManager) SendScheduledMessage(ctx context.Context, sche
 				discordgo.ErrCodeInvalidFormBody,
 				discordgo.ErrCodeMissingPermissions,
 				discordgo.ErrCodeMissingAccess,
+				discordgo.ErrCodeCannotSendEmptyMessage,
 			) {
 			err := m.scheduledMessageStore.UpdateScheduledMessageEnabled(ctx, scheduledMessage.GuildID, scheduledMessage.ID, false, time.Now().UTC())
 			if err != nil {

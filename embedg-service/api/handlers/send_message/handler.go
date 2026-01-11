@@ -179,9 +179,7 @@ func (h *SendMessageHandler) HandleSendMessageToWebhook(c *fiber.Ctx, req wire.M
 		params.TTS = data.TTS
 	}
 
-	attachments := make([]discord.AttachmentUpdate, len(req.Attachments))
-
-	for i, attachment := range req.Attachments {
+	for _, attachment := range req.Attachments {
 		dataURL, err := dataurl.DecodeString(attachment.DataURL)
 		if err != nil {
 			return handlers.BadRequest("invalid_attachments", "Failed to parse attachment data URL")
@@ -192,10 +190,6 @@ func (h *SendMessageHandler) HandleSendMessageToWebhook(c *fiber.Ctx, req wire.M
 			// ContentType: dataURL.ContentType(),
 			Reader: bytes.NewReader(dataURL.Data),
 		})
-
-		attachments[i] = discord.AttachmentKeep{
-			ID: common.ID(i),
-		}
 	}
 
 	if req.WebhookType == "guilded" {
@@ -222,7 +216,6 @@ func (h *SendMessageHandler) HandleSendMessageToWebhook(c *fiber.Ctx, req wire.M
 				Components:      &params.Components,
 				AllowedMentions: params.AllowedMentions,
 				Files:           params.Files,
-				Attachments:     &attachments,
 			},
 			rest.UpdateWebhookMessageParams{
 				ThreadID:       req.ThreadID.ID,
