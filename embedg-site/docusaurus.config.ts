@@ -176,6 +176,11 @@ const config: Config = {
       };
     },
   ],
+
+  scripts: [
+    { src: "/swetrix.js", defer: true },
+    { src: "js/setupswetrix.js", defer: true },
+  ],
 };
 
 module.exports = config;
