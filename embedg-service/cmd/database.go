@@ -13,6 +13,7 @@ var databaseCMD cli.Command
 
 func init() {
 	migrateCommands := []*cli.Command{}
+	backupCommands := []*cli.Command{}
 	for _, db := range databases {
 		migrateCommands = append(migrateCommands, &cli.Command{
 			Name:  db,
@@ -105,6 +106,30 @@ func init() {
 				},
 			},
 		})
+
+		backupCommands = append(backupCommands, &cli.Command{
+			Name:  db,
+			Usage: fmt.Sprintf("Backup the %s database.", db),
+			Subcommands: []*cli.Command{
+				{
+					Name:  "create",
+					Usage: "Create a backup of the database.",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:     "name",
+							Usage:    "The name of the backup.",
+							Required: true,
+						},
+					},
+					Action: func(c *cli.Context) error {
+						return database.Backup(c.Context, db, database.BackupOpts{
+							Operation: "create",
+							Name:      c.String("name"),
+						})
+					},
+				},
+			},
+		})
 	}
 
 	databaseCMD = cli.Command{
@@ -115,6 +140,11 @@ func init() {
 				Name:        "migrate",
 				Description: "Run database migrations.",
 				Subcommands: migrateCommands,
+			},
+			{
+				Name:        "backup",
+				Description: "Backup the database.",
+				Subcommands: backupCommands,
 			},
 		},
 	}
