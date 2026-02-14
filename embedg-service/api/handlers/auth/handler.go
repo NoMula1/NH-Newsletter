@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"log/slog"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/merlinfuchs/embed-generator/embedg-service/api/session"
@@ -191,15 +192,30 @@ func (h *AuthHandler) setOauthStateCookie(c *fiber.Ctx) string {
 }
 
 func (h *AuthHandler) getOauthRedirectURL(c *fiber.Ctx) string {
-	redirectURL := h.config.AppPublicURL
+	base := strings.TrimSuffix(h.config.AppPublicBaseURL, "/")
+	path := c.Cookie("oauth_redirect")
+	c.DeleteCookie("oauth_redirect")
 
-	path := c.Cookies("oauth_redirect")
-	if path != "" {
-		redirectURL += path
+	if path == "" {
+		return base
 	}
 
-	c.ClearCookie("oauth_redirect")
-	return redirectURL
+	finalURL := base + path
+	parsed, err := url.Parse(finalURL)
+	if err != nil {
+		return base
+	}
+	baseParsed, err := url.Parse(base)
+	if err != nil {
+		return base
+	}
+
+	// Ensure redirect stays on the same origin (scheme + host).
+	if parsed.Host != baseParsed.Host || parsed.Scheme != baseParsed.Scheme {
+		return base
+	}
+
+	return finalURL
 }
 
 func (h *AuthHandler) setOauthRedirectCookie(c *fiber.Ctx) {
