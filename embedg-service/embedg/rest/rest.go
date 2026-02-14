@@ -12,6 +12,8 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/common"
 )
 
+var ProxyURL string
+
 type RestClient struct {
 	rest.Rest
 
@@ -27,6 +29,10 @@ func NewRestClient(token string, opts ...rest.ConfigOpt) *RestClient {
 		ttlcache.WithTTL[string, *discord.Member](5 * time.Minute),
 	)
 	go memberCache.Start()
+
+	if ProxyURL != "" {
+		opts = append(opts, rest.WithURL(ProxyURL))
+	}
 
 	return &RestClient{
 		Rest:        rest.New(rest.NewClient(token, opts...)),

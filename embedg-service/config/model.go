@@ -44,6 +44,7 @@ type DiscordConfig struct {
 	ClientID     string `toml:"client_id" validate:"required"`
 	ClientSecret string `toml:"client_secret" validate:"required"`
 	PublicKey    string `toml:"public_key" validate:"required"`
+	RestURL      string `toml:"rest_url"`
 }
 
 type PremiumConfig struct {

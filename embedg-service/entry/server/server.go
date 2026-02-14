@@ -15,6 +15,7 @@ import (
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/postgres"
 	"github.com/merlinfuchs/embed-generator/embedg-service/db/s3"
 	"github.com/merlinfuchs/embed-generator/embedg-service/embedg"
+	"github.com/merlinfuchs/embed-generator/embedg-service/embedg/rest"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/custom_bot"
 	"github.com/merlinfuchs/embed-generator/embedg-service/manager/premium"
 	scheduled_messages "github.com/merlinfuchs/embed-generator/embedg-service/manager/scheduled_message"
@@ -23,6 +24,11 @@ import (
 )
 
 func Run(ctx context.Context, pg *postgres.Client, blob *s3.Client, cfg *config.RootConfig) error {
+	if cfg.Discord.RestURL != "" {
+		slog.Info("Using custom Discord REST URL", "url", cfg.Discord.RestURL)
+		rest.ProxyURL = cfg.Discord.RestURL
+	}
+
 	embedg, err := embedg.NewEmbedGenerator(ctx, embedg.EmbedGeneratorConfig{
 		Token:        cfg.Discord.Token,
 		BrokerURL:    cfg.Broker.NATS.URL,
