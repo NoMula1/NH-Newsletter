@@ -178,8 +178,8 @@ const config: Config = {
   ],
 
   scripts: [
-    { src: "/swetrix.js", defer: true },
-    { src: "js/setupswetrix.js", defer: true },
+    { src: "/js/setupop.js", defer: true },
+    { src: "https://openpanel.dev/op1.js", defer: true },
   ],
 };
 
