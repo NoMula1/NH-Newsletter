@@ -53,6 +53,7 @@ func (h *SendMessageHandler) HandleRestoreMessageFromChannel(c *fiber.Ctx, req w
 		Embeds:     msg.Embeds,
 		Components: components,
 		Actions:    actionSets,
+		Flags:      msg.Flags,
 	}
 
 	attachments := downloadMessageAttachments(msg.Attachments)
