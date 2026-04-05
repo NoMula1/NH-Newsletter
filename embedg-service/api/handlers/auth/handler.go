@@ -192,9 +192,9 @@ func (h *AuthHandler) setOauthStateCookie(c *fiber.Ctx) string {
 }
 
 func (h *AuthHandler) getOauthRedirectURL(c *fiber.Ctx) string {
-	base := strings.TrimSuffix(h.config.AppPublicBaseURL, "/")
-	path := c.Cookie("oauth_redirect")
-	c.DeleteCookie("oauth_redirect")
+	base := strings.TrimSuffix(h.config.AppPublicURL, "/")
+	path := c.Cookies("oauth_redirect")
+	c.ClearCookie("oauth_redirect")
 
 	if path == "" {
 		return base
