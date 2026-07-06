@@ -29,9 +29,12 @@ RUN cd embedg-server && go build --tags "embedapp embedsite" && cd ..
 FROM debian:stable-slim
 WORKDIR /root/
 COPY --from=builder /root/embedg-server/embedg-server .
+COPY config.yaml /root/config.yaml
+COPY entrypoint.sh /root/entrypoint.sh
 
 RUN apt-get update
-RUN apt-get install -y ca-certificates gnupg build-essential
+RUN apt-get install -y ca-certificates gnupg build-essential gettext-base
+RUN chmod +x /root/entrypoint.sh
 
 EXPOSE 8080
-CMD ./embedg-server migrate postgres up; ./embedg-server server
+CMD ["/root/entrypoint.sh"]
