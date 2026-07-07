@@ -47,12 +47,41 @@ func (m *PremiumManager) GetPlanFeaturesForGuild(ctx context.Context, guildID st
 		return planFeatures, fmt.Errorf("failed to retrieve entitlments for guild: %w", err)
 	}
 
-	for _, entitlement := range entitlements {
+	// DEBUG: Log entitlements found
+	log.Info().
+		Str("guild_id", guildID).
+		Int("entitlements_count", len(entitlements)).
+		Msg("DEBUG: Entitlements query result")
+
+	for i, entitlement := range entitlements {
+		log.Info().
+			Str("guild_id", guildID).
+			Int("entitlement_index", i).
+			Str("sku_id", entitlement.SkuID).
+			Msg("DEBUG: Processing entitlement")
+
 		plan := m.GetPlanBySKUID(entitlement.SkuID)
 		if plan != nil {
+			log.Info().
+				Str("guild_id", guildID).
+				Str("sku_id", entitlement.SkuID).
+				Str("plan_id", plan.ID).
+				Msg("DEBUG: Plan found for SKU, merging features")
 			planFeatures.Merge(plan.Features)
+		} else {
+			log.Warn().
+				Str("guild_id", guildID).
+				Str("sku_id", entitlement.SkuID).
+				Interface("available_plans", m.plans).
+				Msg("DEBUG: No plan found for SKU")
 		}
 	}
+
+	log.Info().
+		Str("guild_id", guildID).
+		Interface("final_component_types", planFeatures.ComponentTypes).
+		Bool("is_premium", planFeatures.IsPremium).
+		Msg("DEBUG: Final features after entitlements")
 
 	return planFeatures, nil
 }
@@ -101,6 +130,19 @@ func New(pg *postgres.PostgresStore, bot *bot.Bot) *PremiumManager {
 	err := viper.UnmarshalKey("premium.plans", &plans)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to unmarshal plans")
+	}
+
+	log.Info().
+		Int("plans_count", len(plans)).
+		Msg("DEBUG: Plans loaded from config")
+
+	for i, plan := range plans {
+		log.Info().
+			Int("plan_index", i).
+			Str("plan_id", plan.ID).
+			Str("sku_id", plan.SKUID).
+			Interface("component_types", plan.Features.ComponentTypes).
+			Msg("DEBUG: Plan details")
 	}
 
 	defaultPlanFeatures := model.PlanFeatures{
