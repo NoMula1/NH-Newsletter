@@ -72,6 +72,3 @@ premium:
         max_kv_keys: 1000
         components_v2: true
         component_types: [1, 2, 3, 9, 10, 11, 12, 13, 14, 17]
-
-
-i put it in a folder called root idk if thats right or not
