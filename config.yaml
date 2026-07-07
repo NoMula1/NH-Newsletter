@@ -56,7 +56,7 @@ premium:
         component_types: [1, 2, 3, 9, 10, 11, 12, 17]
     # An additional premium plan that will apply when the user or guild has the SKU
     - id: premium_server
-      sku_id: "123"
+      sku_id: "1523853415275565259"
       features:
         max_saved_messages: 100
         max_actions_per_component: 10
