@@ -12,30 +12,30 @@ import clsx from "clsx";
 
 const features = [
   {
-    name: "Save Messages",
+    name: "Secure Storage",
     description:
-      "Save your messages in the cloud and have them available on all your devices. You can also share them with your friends!",
+      "Store your embed templates in the cloud. Access them anywhere, anytime. Share with your team securely.",
     href: "/docs/save-messages",
     icon: CloudIcon,
   },
   {
     name: "Custom Branding",
     description:
-      "Customize your embeds with your own branding. You can even change the username and avatar of the message to your liking!",
+      "Customize every aspect of your embeds. Change usernames, avatars, colors. Full control over your brand.",
     href: "/docs/custom-branding",
     icon: EyeDropperIcon,
   },
   {
-    name: "Interactive Components",
+    name: "Interactive Payloads",
     description:
-      "Add interactivity to your messages with buttons and select menus. You can hand out roles or send custom responses to your users!",
+      "Deploy buttons and select menus. Execute custom logic. Distribute roles and trigger responses.",
     href: "/docs/interactive-components",
     icon: CursorArrowRippleIcon,
   },
   {
     name: "White Label",
     description:
-      "Integrate your own bot into Embed Generator to change the username and avatar of responses to buttons, and select menus!",
+      "Integrate your own bot. Full control over responses. Make it yours.",
     href: "/docs/white-label",
     icon: TagIcon,
     premium: true,
@@ -43,7 +43,7 @@ const features = [
   {
     name: "Custom Commands",
     description:
-      "Add your own commands with custom logic and responses to Embed Generator that your server members can use!",
+      "Write custom commands with advanced logic. Deploy to your server. Full automation.",
     href: "/docs/custom-commands",
     icon: CommandLineIcon,
     premium: true,
@@ -51,7 +51,7 @@ const features = [
   {
     name: "AI Assistant",
     description:
-      "Use our powerful AI assistant to quickly draft new messages and boost your creativity!",
+      "Leverage AI to generate embeds. Boost creativity. Accelerate your workflow.",
     href: "/docs/ai-assistant",
     icon: SparklesIcon,
     premium: true,
@@ -60,32 +60,37 @@ const features = [
 
 export default function HomeFeatures(): JSX.Element {
   return (
-    <div className="bg-dark-2 px-16">
+    <div className="bg-dark-2 px-16 border-b border-red/20">
       <div className="max-w-7xl mx-auto text-white py-20 lg:py-32">
-        <div className="mx-auto max-w-2xl lg:max-w-none">
-          <div className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-32 lg:max-w-none lg:grid-cols-3">
+        <div className="mx-auto max-w-2xl lg:max-w-none mb-16">
+          <h2 className="text-4xl font-bold font-mono text-center">
+            <span className="text-red">&gt;</span> CAPABILITIES
+          </h2>
+        </div>
+        <div className="mx-auto max-w-xl lg:max-w-none">
+          <div className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
             {features.map((feature) => (
-              <div key={feature.name} className="flex flex-col">
+              <div key={feature.name} className="flex flex-col border border-red/20 rounded-lg p-6 hover:border-red/50 transition-colors hover:bg-red/5">
                 <div className="text-base font-semibold leading-7 text-white">
                   <div
                     className={clsx(
-                      "mb-6 flex h-10 w-10 items-center justify-center rounded-lg",
-                      feature.premium ? "bg-orange-400" : "bg-blurple"
+                      "mb-6 flex h-10 w-10 items-center justify-center rounded-lg border",
+                      feature.premium ? "border-red/50 bg-red/10" : "border-red/30 bg-red/5"
                     )}
                   >
                     <feature.icon
-                      className="h-6 w-6 text-white"
+                      className={clsx("h-6 w-6", feature.premium ? "text-red" : "text-red")}
                       aria-hidden="true"
                     />
                   </div>
-                  <h3 className="text-base mb-1">{feature.name}</h3>
+                  <h3 className="text-base mb-1 font-mono">{feature.name}</h3>
                 </div>
-                <div className="mt-1 flex flex-auto flex-col text-base leading-7 text-gray-300">
+                <div className="mt-1 flex flex-auto flex-col text-base leading-7 text-gray-400">
                   <p className="flex-auto ml-0">{feature.description}</p>
                   <p>
                     <a
                       href={feature.href}
-                      className="text-sm font-semibold leading-6 text-indigo-400"
+                      className="text-sm font-semibold leading-6 text-red hover:text-red-light transition-colors"
                     >
                       Learn more <span aria-hidden="true">→</span>
                     </a>
