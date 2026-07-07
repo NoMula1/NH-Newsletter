@@ -3,8 +3,8 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: "Embed Generator | Discord embeds without the hassle",
-  tagline: "The best way to create Discord embeds!",
+  title: "NH-Newsletter | Discord Embed Generator",
+  tagline: "Create rich Discord embeds without the hassle — NightHawk Network",
   favicon: "img/logo.svg",
 
   // Set the production url of your site here
@@ -79,7 +79,7 @@ const config: Config = {
         },
         {
           name: "theme-color",
-          content: "#237feb",
+          content: "#E63946",
         },
       ],
 
@@ -90,9 +90,9 @@ const config: Config = {
       // Replace with your project's social card
       image: "img/logo-256.png",
       navbar: {
-        title: "Embed Generator",
+        title: "NH-Newsletter",
         logo: {
-          alt: "Embed Generator",
+          alt: "NH-Newsletter",
           src: "img/logo.svg",
           className: "rounded-full",
         },
@@ -155,7 +155,7 @@ const config: Config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Merlin Fuchs & Contributors | Not affiliated with or endorsed by Discord Inc.`,
+        copyright: `© ${new Date().getFullYear()} Merlin Fuchs & Contributors · NH-Newsletter · Not affiliated with Discord Inc.`,
       },
       prism: {
         theme: prismThemes.github,
