@@ -3,26 +3,33 @@ import React from "react";
 
 export default function HomeHero(): JSX.Element {
   return (
-    <div className="bg-blurple md:px-16">
+    <div className="bg-dark-2 md:px-16 border-b border-red/20">
       <div className="flex max-w-7xl mx-auto py-20 flex-col lg:flex-row-reverse items-center">
         <div className="lg:w-1/2 px-6 lg:pr-0 lg:pl-12 xl:pl-20 mb-10 lg:mb-0">
-          <img src="/img/example.jpg" alt="" className="rounded-lg shadow-lg" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-red/20 blur-3xl rounded-lg"></div>
+            <img src="/img/example.jpg" alt="" className="rounded-lg shadow-2xl shadow-red/50 relative border border-red/30" />
+          </div>
         </div>
         <div className="lg:w-1/2 px-12">
-          <h1 className="text-gray-100 font-bold text-6xl leading-tight mb-6">
-            The best way to create Discord embeds!
+          <div className="font-mono text-red text-sm mb-4 tracking-widest">
+            &gt; NIGHT HAWK NEWSLETTER
+          </div>
+          <h1 className="text-gray-100 font-bold text-6xl leading-tight mb-6 font-mono">
+            CRAFT DISCORD
+            <br />
+            <span className="text-red">EMBEDS</span>
           </h1>
-          <h2 className="text-gray-300 font-light text-lg mb-8">
-            Create embed messages for your Discord server with ease and give
-            them your own branding using webhooks.
+          <h2 className="text-gray-400 font-light text-lg mb-8 leading-relaxed">
+            Penetrate Discord's embed system. Create sophisticated message templates with custom branding, webhooks, and interactive components. Secure your server's communication.
           </h2>
           <div className="flex items-center">
             <a
-              className="px-5 py-3 text-xl rounded-md border-2 border-solid border-gray-300 flex items-center text-gray-200 space-x-3 hover:text-white hover:border-white hover:bg-white/20 transition-colors hover:no-underline flex-none"
+              className="px-6 py-3 text-xl rounded-md border-2 border-red flex items-center text-red space-x-3 hover:text-white hover:bg-red/20 transition-all font-mono font-bold hover:shadow-lg hover:shadow-red/50"
               href="/app"
             >
               <SparklesIcon className="h-5 w-5" />
-              <div className="text-white">Open App</div>
+              <div>LAUNCH TERMINAL</div>
             </a>
           </div>
         </div>
