@@ -63,6 +63,14 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 		return fmt.Errorf("could not get plan features: %w", err)
 	}
 
+	// DEBUG LOGGING
+	log.Info().
+		Str("guild_id", channel.GuildID).
+		Interface("component_types", features.ComponentTypes).
+		Bool("is_premium", features.IsPremium).
+		Int("max_actions_per_component", features.MaxActionsPerComponent).
+		Msg("DEBUG: Guild premium features loaded")
+
 	templates := template.NewContext(
 		"SEND_MESSAGE", features.MaxTemplateOps,
 		template.NewGuildProvider(h.bot.State, channel.GuildID, nil),
@@ -115,6 +123,11 @@ func (h *SendMessageHandler) HandleSendMessageToChannel(c *fiber.Ctx, req wire.M
 
 	params.Components, err = h.actionParser.ParseMessageComponents(data.Components, features.ComponentTypes)
 	if err != nil {
+		log.Error().
+			Str("guild_id", channel.GuildID).
+			Interface("allowed_component_types", features.ComponentTypes).
+			Err(err).
+			Msg("DEBUG: Failed to parse message components")
 		return helpers.BadRequest("invalid_actions", err.Error())
 	}
 
