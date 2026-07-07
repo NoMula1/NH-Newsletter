@@ -54,7 +54,7 @@ premium:
         max_kv_keys: 10
         components_v2: true
         component_types: [1, 2, 3, 9, 10, 11, 12, 17]
-    # An additional premium plan that will apply when the user or guild has the SKU
+    # Premium plan
     - id: premium_server
       sku_id: "1523853415275565259"
       features:
@@ -62,7 +62,7 @@ premium:
         max_actions_per_component: 10
         advanced_action_types: true
         ai_assistant: true
-        is_premium: true # This is used for handing out cosmetics like a role on the support server
+        is_premium: true
         custom_bot: true
         max_custom_commands: 25
         max_image_upload_size: 8000000
