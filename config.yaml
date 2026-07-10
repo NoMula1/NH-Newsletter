@@ -56,7 +56,7 @@ premium:
         component_types: [1, 2, 3, 9, 10, 11, 12, 17]
     # Premium plan
     - id: premium_server
-      sku_id: "1523853415275565259"
+      sku_id: "1525253435849445387"
       features:
         max_saved_messages: 100
         max_actions_per_component: 10
