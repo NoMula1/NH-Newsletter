@@ -4,27 +4,229 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/* ── NightHawk Fonts ─────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+/* ── Infima / Docusaurus overrides ───────────────────────────────── */
 :root {
-  --ifm-color-primary: #237feb;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #E63946;
+  --ifm-color-primary-dark: #d42f3c;
+  --ifm-color-primary-darker: #c92c39;
+  --ifm-color-primary-darkest: #a5242f;
+  --ifm-color-primary-light: #e84f5b;
+  --ifm-color-primary-lighter: #ea5c67;
+  --ifm-color-primary-lightest: #ef7f88;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  /* NightHawk design tokens */
+  --nh-bg: #0a0a0a;
+  --nh-bg-2: #111111;
+  --nh-bg-3: #1a1a1a;
+  --nh-bg-4: #222222;
+  --nh-red: #E63946;
+  --nh-red-dark: #c1121f;
+  --nh-text: #e8e8e8;
+  --nh-text-muted: #888888;
+  --nh-border: #2a2a2a;
+  --nh-border-bright: #3a3a3a;
+  --ifm-font-family-base: "Inter", system-ui, sans-serif;
+  --ifm-font-family-monospace: "JetBrains Mono", "Fira Code", Consolas, monospace;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
-  --ifm-color-primary: #237feb;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-color-primary: #E63946;
+  --ifm-color-primary-dark: #d42f3c;
+  --ifm-color-primary-darker: #c92c39;
+  --ifm-color-primary-darkest: #a5242f;
+  --ifm-color-primary-light: #e84f5b;
+  --ifm-color-primary-lighter: #ea5c67;
+  --ifm-color-primary-lightest: #ef7f88;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-background-color: #0a0a0a;
+  --ifm-navbar-background-color: rgba(10, 10, 10, 0.85);
+}
+
+/* ── NightHawk scanlines overlay ─────────────────────────────────── */
+.nh-scanlines {
+  position: relative;
+}
+.nh-scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── NightHawk grain overlay ─────────────────────────────────────── */
+.nh-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* ── Phosphor glow on red accents ────────────────────────────────── */
+.nh-glow-red {
+  text-shadow: 0 0 12px rgba(230, 57, 70, 0.6);
+}
+.nh-glow-box {
+  box-shadow: 0 0 0 1px rgba(230, 57, 70, 0.3), 0 0 20px rgba(230, 57, 70, 0.1);
+}
+.nh-glow-box:hover {
+  box-shadow: 0 0 0 1px rgba(230, 57, 70, 0.6), 0 0 32px rgba(230, 57, 70, 0.2);
+}
+
+/* ── Terminal window chrome ──────────────────────────────────────── */
+.nh-terminal {
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: "JetBrains Mono", monospace;
+}
+.nh-terminal-bar {
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nh-terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.nh-terminal-body {
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #c8c8c8;
+}
+
+/* ── Scroll-reveal utility ───────────────────────────────────────── */
+.nh-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.nh-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Card tilt effect ────────────────────────────────────────────── */
+.nh-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+.nh-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ── Cursor blink ────────────────────────────────────────────────── */
+.nh-cursor::after {
+  content: "▋";
+  animation: blinkCursor 1s step-end infinite;
+  color: #E63946;
+}
+@keyframes blinkCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Gradient text ───────────────────────────────────────────────── */
+.nh-gradient-text {
+  background: linear-gradient(135deg, #E63946 0%, #ff6b6b 50%, #E63946 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Pill badge ──────────────────────────────────────────────────── */
+.nh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(230, 57, 70, 0.4);
+  background: rgba(230, 57, 70, 0.08);
+  color: #E63946;
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Step connector line ─────────────────────────────────────────── */
+.nh-step-line {
+  position: absolute;
+  top: 24px;
+  left: calc(50% + 24px);
+  right: calc(-50% + 24px);
+  height: 1px;
+  background: linear-gradient(90deg, #E63946, transparent);
+}
+
+/* ── Stat counter ────────────────────────────────────────────────── */
+.nh-stat-value {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #E63946;
+  line-height: 1;
+}
+
+/* ── Docusaurus navbar override for NightHawk theme ─────────────── */
+.navbar {
+  background: rgba(10, 10, 10, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid #1e1e1e !important;
+  box-shadow: none !important;
+}
+.navbar__title {
+  font-family: "JetBrains Mono", monospace !important;
+  font-weight: 600 !important;
+  color: #e8e8e8 !important;
+}
+.navbar__link {
+  color: #888888 !important;
+  font-size: 14px !important;
+}
+.navbar__link:hover,
+.navbar__link--active {
+  color: #E63946 !important;
+}
+.footer {
+  background: #0a0a0a !important;
+  border-top: 1px solid #1e1e1e !important;
+}
+.footer__title {
+  color: #e8e8e8 !important;
+  font-family: "JetBrains Mono", monospace !important;
+}
+.footer__link-item {
+  color: #888888 !important;
+}
+.footer__link-item:hover {
+  color: #E63946 !important;
+}
+.footer__copyright {
+  color: #555555 !important;
+  font-size: 12px !important;
+  font-family: "JetBrains Mono", monospace !important;
 }
